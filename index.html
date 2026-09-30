@@ -484,90 +484,232 @@
   .pep-btn.fill{background:var(--rose-deep);color:#ffffff;}
 
   /* =====================================================================
-     HANDCRAFTED STATIONERY PAPER SURFACE
+     REAL HAND-GIVEN LETTER PAGE (Torn Notebook Sheet + Margin + Fold + Dog-Ear)
   ===================================================================== */
   .paper-wrap{
     position:relative;width:100%;max-width:30rem;
     perspective:1400px;
+    padding:0 .15rem;
   }
   .paper-3d-tilt{
     position:relative;width:100%;
     transform-style:preserve-3d;
     will-change:transform;
   }
+  /* Lifted bottom-corner shadows so the sheet curls off the desk like real paper */
+  .paper-3d-tilt::before,
+  .paper-3d-tilt::after{
+    content:"";
+    position:absolute;
+    bottom:10px;
+    width:46%;
+    height:26px;
+    background:rgba(55, 35, 18, 0.24);
+    filter:blur(11px);
+    z-index:0;
+    pointer-events:none;
+  }
+  .paper-3d-tilt::before{
+    left:12px;
+    transform:rotate(-3.5deg) skewX(-8deg);
+  }
+  .paper-3d-tilt::after{
+    right:14px;
+    transform:rotate(3.5deg) skewX(8deg);
+  }
+
   .paper, .letter-full{
     position:relative;
+    z-index:1;
     display:flex;flex-direction:column;
     background-color:var(--paper);
-    border-radius:8px;
-    border:1px solid var(--paper-border);
+    border-radius:2px 3px 4px 2px;
+    border-left:1px solid rgba(165, 138, 112, 0.28);
+    border-right:1px solid rgba(165, 138, 112, 0.32);
+    border-bottom:1px solid rgba(150, 120, 95, 0.38);
+    border-top:none;
     box-shadow:
-      0 24px 50px -14px rgba(70, 45, 25, 0.15),
-      0 6px 16px -4px rgba(70, 45, 25, 0.07),
-      0 1px 0 3px #f7f1e8,
-      0 2px 0 4px rgba(165, 135, 110, 0.18),
-      inset 0 0 44px rgba(242, 228, 210, 0.35);
-    padding:1.85rem 1.45rem 2.1rem;
-    min-height:56vh;
-    background-image:linear-gradient(var(--line) 1px, transparent 1px);
-    background-size:100% 2.15rem;
-    background-position:0 4.65rem;
+      0 18px 38px -14px rgba(60, 38, 20, 0.18),
+      0 3px 10px -2px rgba(60, 38, 20, 0.08),
+      -3px 4px 0 -1px rgba(250, 244, 235, 0.92),
+      -3px 4px 0 0 rgba(165, 135, 110, 0.25),
+      inset 0 0 52px rgba(235, 216, 192, 0.32);
+    /* Padding leaves room on the left for the red vertical notebook margin line */
+    padding:0 1.35rem 2.35rem 3.25rem;
+    min-height:58vh;
+    /* Classic notebook horizontal ruled lines + vertical double pink-red margin line */
+    background-image:
+      linear-gradient(90deg,
+        transparent 2.35rem,
+        rgba(206, 92, 98, 0.42) 2.35rem,
+        rgba(206, 92, 98, 0.42) calc(2.35rem + 1px),
+        transparent calc(2.35rem + 1px),
+        transparent calc(2.35rem + 4px),
+        rgba(206, 92, 98, 0.26) calc(2.35rem + 4px),
+        rgba(206, 92, 98, 0.26) calc(2.35rem + 5px),
+        transparent calc(2.35rem + 5px)
+      ),
+      repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent calc(2.15rem - 1px),
+        var(--line) calc(2.15rem - 1px),
+        var(--line) 2.15rem
+      );
+    background-size:100% 100%, 100% 2.15rem;
+    background-position:0 0, 0 3.7rem;
     overflow:hidden;
+    transform:rotate(-0.35deg);
     transition:background-color .35s ease;
+    /* Clip bottom-right corner slightly for the 3D curled dog-ear fold */
+    clip-path:polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
   }
+
+  /* Torn / Perforated Top Notebook Edge */
+  .page-torn-top{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:11px;
+    z-index:3;
+    pointer-events:none;
+    background-image:
+      radial-gradient(circle at 7px -1px, #fdfbf7 5.5px, rgba(160,130,105,.32) 6px, transparent 6.8px);
+    background-size:14px 12px;
+    background-repeat:repeat-x;
+  }
+
+  /* Left Margin Notebook Holes (3 subtle punch holes on the left margin strip) */
+  .page-holes{
+    position:absolute;
+    top:0;bottom:0;left:.72rem;
+    width:14px;
+    z-index:2;
+    pointer-events:none;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-around;
+    padding:3.2rem 0;
+  }
+  .page-holes span{
+    width:11px;height:11px;
+    border-radius:50%;
+    background:var(--bg-0);
+    box-shadow:
+      inset 1px 1.5px 3px rgba(60, 38, 20, 0.22),
+      0 1px 0 rgba(255, 255, 255, 0.8);
+    border:1px solid rgba(165, 138, 112, 0.28);
+  }
+
+  /* Realistic 4-Way Hand-Folded Creases (folded in hand/pocket to give in person) */
   .paper::before, .letter-full::before{
     content:"";
-    position:absolute;inset:10px;
-    border:1px solid rgba(180, 150, 125, 0.18);
-    border-radius:5px;
+    position:absolute;inset:0;
     pointer-events:none;z-index:1;
-  }
-  .paper::after, .letter-full::after{
-    content:"";
-    position:absolute;inset:0;pointer-events:none;z-index:1;
     background:
+      /* Horizontal center fold crease */
       linear-gradient(180deg,
-        transparent 33%,
-        rgba(145, 115, 90, 0.05) 33.3%,
-        rgba(255, 255, 255, 0.65) 33.6%,
-        transparent 34%,
-        transparent 66.5%,
-        rgba(145, 115, 90, 0.05) 66.8%,
-        rgba(255, 255, 255, 0.65) 67.1%,
-        transparent 67.5%
+        transparent 48.8%,
+        rgba(120, 90, 65, 0.065) 49.6%,
+        rgba(255, 255, 255, 0.78) 50.1%,
+        rgba(120, 90, 65, 0.03) 50.6%,
+        transparent 51.4%
+      ),
+      /* Vertical center fold crease */
+      linear-gradient(90deg,
+        transparent 49.2%,
+        rgba(120, 90, 65, 0.05) 49.8%,
+        rgba(255, 255, 255, 0.72) 50.2%,
+        transparent 50.9%
       );
   }
 
-  .paper-heart{
-    position:absolute;top:1rem;left:50%;transform:translateX(-50%);
-    width:2rem;z-index:2;opacity:.82;pointer-events:none;
+  /* Curled Dog-Ear Corner at Bottom-Right */
+  .paper::after, .letter-full::after{
+    content:"";
+    position:absolute;
+    right:0;bottom:0;
+    width:30px;height:30px;
+    pointer-events:none;z-index:4;
+    background:linear-gradient(135deg, #efe4d4 0%, #fbf6ee 48%, rgba(145,115,90,.28) 50%, transparent 52%);
+    box-shadow:-3px -3px 8px rgba(60, 38, 20, 0.14);
+    border-top:1px solid rgba(165, 138, 112, 0.25);
+    border-left:1px solid rgba(165, 138, 112, 0.25);
+    border-top-left-radius:4px;
   }
-  .paper-heart svg path{fill:var(--rose-deep);}
+
+  /* Top Notebook Header Band (above the first double rule line) */
+  .page-header-band{
+    position:relative;z-index:2;
+    height:3.7rem;
+    margin-left:-3.25rem;
+    margin-right:-1.35rem;
+    padding:1.05rem 1.25rem .35rem 3.25rem;
+    border-bottom:3px double rgba(206, 92, 98, 0.42);
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+  }
+  .page-tiny-doodle{
+    font-family:'Caveat',cursive;
+    font-size:1.15rem;
+    color:rgba(168, 56, 64, 0.7);
+    display:inline-flex;align-items:center;gap:.25rem;
+    transform:rotate(-2deg);
+  }
+  .page-tiny-doodle svg{
+    width:1.15rem;height:1.05rem;fill:var(--rose-deep);opacity:.78;
+  }
+  .page-date-box{
+    border:1px solid rgba(206, 92, 98, 0.36);
+    border-radius:4px;
+    padding:.08rem .5rem;
+    font-family:'Caveat',cursive;
+    font-size:1.05rem;
+    line-height:1.15;
+    color:var(--ink-soft);
+    background:rgba(255,255,255,.38);
+    display:inline-flex;
+    align-items:center;
+    gap:.3rem;
+  }
+  .page-date-box small{
+    font-family:'Cormorant Garamond',serif;
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:rgba(168, 56, 64, 0.68);
+    font-weight:600;
+  }
 
   .script-label{
-    font-family:'Caveat',cursive;font-size:1.58rem;color:var(--ink);
+    font-family:'Caveat',cursive;font-size:1.62rem;color:var(--ink);
     white-space:nowrap;
   }
   .salutation-line, .signoff-line{
     position:relative;z-index:2;display:flex;align-items:baseline;flex-wrap:wrap;gap:.35rem;
+    min-height:2.15rem;
+    line-height:2.15rem;
   }
-  .salutation-line{margin-top:1.9rem;}
-  .signoff-line{margin-top:.5rem;justify-content:flex-end;padding-right:.2rem;}
+  .salutation-line{margin-top:.1rem;}
+  .signoff-line{margin-top:.2rem;justify-content:flex-end;padding-right:.4rem;}
 
   .inline-blank{
-    font-family:'Caveat',cursive;font-size:1.58rem;color:var(--ink);
-    background:transparent;border:none;border-bottom:1.5px dashed rgba(140,110,88,.45);
+    font-family:'Caveat',cursive;font-size:1.62rem;color:var(--ink);
+    background:transparent;border:none;border-bottom:1.5px dashed rgba(140,110,88,.42);
     padding:0 .2rem;min-width:6.2rem;max-width:58%;border-radius:0;
+    line-height:1.9rem;
   }
   .inline-blank:focus{outline:none;border-bottom-color:var(--rose-deep);border-bottom-style:solid;}
   .inline-blank::placeholder{color:var(--ink-muted);opacity:.75;}
 
   .paper textarea{
     position:relative;z-index:2;
-    flex:1;width:100%;min-height:34vh;
+    flex:1;width:100%;min-height:34.4rem;
     background:transparent;border:none;resize:none;
-    font-family:'Caveat',cursive;font-size:1.58rem;line-height:2.15rem;
-    color:var(--ink);padding-top:.4rem;
+    font-family:'Caveat',cursive;font-size:1.62rem;line-height:2.15rem;
+    color:var(--ink);
+    padding:0;
+    margin:0;
   }
   .paper textarea:focus{outline:none;}
   .paper textarea::placeholder{color:var(--ink-muted);font-style:italic;opacity:.82;}
@@ -887,23 +1029,30 @@
     flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
     padding:0 1rem 1.2rem;perspective:1400px;
   }
+  .letter-full-wrap{
+    position:relative;
+    max-width:30rem;
+    margin:.5rem auto 1.5rem;
+    width:100%;
+  }
   .letter-full{
-    max-width:31rem;margin:.5rem auto 1.5rem;
     width:100%;min-height:60vh;
-    padding:2.5rem 1.5rem 3rem;transform-origin:top center;
+    padding:0 1.35rem 2.6rem 3.25rem;
+    transform-origin:top center;
   }
   .letter-full .salutation{
     position:relative;z-index:2;font-family:'Caveat',cursive;
-    font-size:1.8rem;color:var(--ink-soft);margin:1.3rem 0 .35rem;
+    font-size:1.72rem;line-height:2.15rem;color:var(--ink-soft);margin:.1rem 0 0;
   }
   .letter-full .body-text{
     position:relative;z-index:2;
-    font-family:'Caveat',cursive;font-size:1.6rem;line-height:2.15rem;
+    font-family:'Caveat',cursive;font-size:1.62rem;line-height:2.15rem;
     color:var(--ink);white-space:pre-wrap;word-wrap:break-word;
+    min-height:25.8rem;
   }
   .letter-full .sign-off{
     position:relative;z-index:2;font-family:'Caveat',cursive;
-    font-size:1.62rem;color:var(--ink-soft);margin-top:1.25rem;text-align:right;
+    font-size:1.65rem;line-height:2.15rem;color:var(--ink-soft);margin-top:.2rem;text-align:right;padding-right:.4rem;
   }
   .letter-cta{
     display:flex;justify-content:center;
@@ -932,7 +1081,7 @@
 
   @media (min-width:640px){
     .brand h1{font-size:2.55rem;}
-    .paper, .letter-full{padding:2.2rem 2rem 2.4rem;}
+    .paper, .letter-full{padding:0 1.85rem 2.6rem 3.45rem;}
   }
   @media (prefers-reduced-motion: reduce){
     *{transition-duration:.001ms !important;animation-duration:.001ms !important;}
@@ -1048,11 +1197,22 @@
         </div>
       </div>
 
-      <!-- Clean, Lifelike Cotton Paper Sheet -->
+      <!-- Real Handheld Torn Notebook/Diary Letter Page -->
       <div class="paper-wrap" id="paperWrap">
         <div class="paper-3d-tilt" id="paperTilt">
           <div class="paper" id="paperSurface" data-theme="parchment">
-            <div class="paper-heart" aria-hidden="true"><svg viewBox="0 0 100 90"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg></div>
+            <div class="page-torn-top" aria-hidden="true"></div>
+            <div class="page-holes" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="page-header-band">
+              <span class="page-tiny-doodle">
+                <svg viewBox="0 0 100 90" aria-hidden="true"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg>
+                dil ki baat
+              </span>
+              <div class="page-date-box" aria-hidden="true">
+                <small>Date</small>
+                <span class="js-page-date">today</span>
+              </div>
+            </div>
             <div class="salutation-line">
               <span class="script-label">My dearest</span>
               <input id="toInput" class="inline-blank" type="text" maxlength="30" placeholder="their name" autocomplete="off">
@@ -1151,11 +1311,24 @@
       <button type="button" class="pill-btn ghost" id="closeLetterBtn">Close ✕</button>
     </div>
     <div class="letter-scroll">
-      <div class="letter-full" id="letterFull">
-        <div class="paper-heart" aria-hidden="true"><svg viewBox="0 0 100 90"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg></div>
-        <div class="salutation" id="fullSalutation">My dearest,</div>
-        <div class="body-text" id="fullBody"></div>
-        <div class="sign-off" id="fullSignoff"></div>
+      <div class="paper-3d-tilt letter-full-wrap">
+        <div class="letter-full" id="letterFull">
+          <div class="page-torn-top" aria-hidden="true"></div>
+          <div class="page-holes" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="page-header-band">
+            <span class="page-tiny-doodle">
+              <svg viewBox="0 0 100 90" aria-hidden="true"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg>
+              for you, by hand
+            </span>
+            <div class="page-date-box" aria-hidden="true">
+              <small>Date</small>
+              <span class="js-page-date">today</span>
+            </div>
+          </div>
+          <div class="salutation" id="fullSalutation">My dearest,</div>
+          <div class="body-text" id="fullBody"></div>
+          <div class="sign-off" id="fullSignoff"></div>
+        </div>
       </div>
     </div>
     <div class="letter-cta">
@@ -2045,17 +2218,25 @@
   function applyPaperTheme(el, theme){
     el.setAttribute('data-theme', theme);
     var map = {
-      parchment: { paper:'#fffdf9', line:'rgba(175, 145, 120, 0.2)' },
-      blush:     { paper:'#fff6f6', line:'rgba(195, 145, 150, 0.22)' },
-      sage:      { paper:'#f5faf4', line:'rgba(135, 162, 132, 0.22)' },
-      dusk:      { paper:'#f8f5fc', line:'rgba(155, 140, 180, 0.22)' }
+      parchment: { paper:'#fffdf9', line:'rgba(175, 145, 120, 0.22)' },
+      blush:     { paper:'#fff6f6', line:'rgba(195, 145, 150, 0.24)' },
+      sage:      { paper:'#f5faf4', line:'rgba(135, 162, 132, 0.24)' },
+      dusk:      { paper:'#f8f5fc', line:'rgba(155, 140, 180, 0.24)' }
     };
     var c = map[theme] || map.parchment;
     el.style.backgroundColor = c.paper;
-    el.style.backgroundImage = 'linear-gradient(' + c.line + ' 1px, transparent 1px)';
-    el.style.backgroundSize = '100% 2.15rem';
-    el.style.backgroundPosition = '0 4.65rem';
+    el.style.setProperty('--line', c.line);
   }
+
+  (function initPageDates(){
+    var now = new Date();
+    var dd = String(now.getDate()).padStart(2, '0');
+    var mm = String(now.getMonth() + 1).padStart(2, '0');
+    var formatted = dd + ' / ' + mm;
+    document.querySelectorAll('.js-page-date').forEach(function(node){
+      node.textContent = formatted;
+    });
+  })();
 
   // ---------- 11. Encode / Decode ----------
   function b64encode(str){
