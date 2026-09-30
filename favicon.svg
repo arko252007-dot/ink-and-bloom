@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffdf9"/>
+      <stop offset="100%" stop-color="#fae8e4"/>
+    </linearGradient>
+    <linearGradient id="envBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f3e6d5"/>
+    </linearGradient>
+    <linearGradient id="envFlap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffdf9"/>
+      <stop offset="100%" stop-color="#e8d6c0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Soft Warm Rounded App Tile -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#fdf6f0" stroke="#e5cfc0" stroke-width="2"/>
+
+  <!-- Cute Blooming Rose & Leaves Peeking Behind the Letter -->
+  <g transform="translate(34, 8) rotate(14)">
+    <!-- Stem & Green Leaves -->
+    <path d="M10 14 L6 30" stroke="#4f7849" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M8 20 C2 17, 0 22, 5 25 C8 26, 9 22, 8 20 Z" fill="#638f5c"/>
+    <path d="M9 22 C15 19, 18 24, 13 27 C10 28, 9 24, 9 22 Z" fill="#638f5c"/>
+    <!-- Layered Rose Bloom -->
+    <circle cx="10" cy="11" r="8.5" fill="#a83038"/>
+    <circle cx="9.5" cy="10.5" r="6.2" fill="#d94b54"/>
+    <circle cx="9" cy="10" r="3.8" fill="#f58b92"/>
+    <circle cx="8.5" cy="9.5" r="1.8" fill="#fde2e4"/>
+  </g>
+
+  <!-- Tiny Floating Sparkle Heart Top-Left -->
+  <path d="M17 18 C15 15, 11 16, 12 20 C13 23, 17 26, 17 26 C17 26, 21 23, 22 20 C23 16, 19 15, 17 18 Z" fill="#e0636b" transform="rotate(-12 17 21)"/>
+
+  <!-- Tilted Handcrafted Love Envelope -->
+  <g transform="rotate(-4 32 38)">
+    <!-- Envelope Base -->
+    <rect x="10" y="24" width="44" height="30" rx="5" fill="url(#envBody)" stroke="#c7a98c" stroke-width="1.8"/>
+    <!-- Envelope Bottom Fold Lines -->
+    <path d="M11 53 L32 38 L53 53" fill="none" stroke="#d8bea4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Envelope Top Flap -->
+    <path d="M10.5 24.5 L32 41 L53.5 24.5 Z" fill="url(#envFlap)" stroke="#c7a98c" stroke-width="1.8" stroke-linejoin="round"/>
+
+    <!-- Red Wax Seal in Center -->
+    <circle cx="32" cy="40" r="7.5" fill="#9e2a32" stroke="#731b21" stroke-width="1.4"/>
+    <circle cx="32" cy="40" r="5.6" fill="#b83740"/>
+    <!-- Tiny Cream Heart Inside Wax Seal -->
+    <path d="M32 43.3 C29.4 41.4, 28 39.7, 28 38.1 C28 36.8, 29.1 36, 30.3 36.5 C31 36.8, 31.6 37.4, 32 38.1 C32.4 37.4, 33 36.8, 33.7 36.5 C34.9 36, 36 36.8, 36 38.1 C36 39.7, 34.6 41.4, 32 43.3 Z" fill="#fff7f2"/>
+  </g>
+</svg>
