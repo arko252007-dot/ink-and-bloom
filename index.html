@@ -221,11 +221,11 @@
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js" defer></script>
 <style>
   :root{
-    --bg-0:#fdfbf7;
-    --bg-1:#faeee9;
-    --bg-2:#f2f6ef;
-    --paper:#fffdf9;
-    --paper-border:rgba(160, 130, 105, 0.22);
+    --bg-0:#f6f0e6;
+    --bg-1:#f3e4dd;
+    --bg-2:#e9efe6;
+    --paper:#fffefb;
+    --paper-border:rgba(175, 148, 122, 0.26);
     --env-base:#f5ede2;
     --env-flap:#ece0d0;
     --env-inner:#e3d4c0;
@@ -744,99 +744,88 @@
   .pep-btn.fill{background:var(--rose-deep);color:#ffffff;}
 
   /* =====================================================================
-     SIMPLE UNLINED WHITE LETTER PAGE WITH REALISTIC PAPER TEXTURES
+     NATURAL UNLINED COTTON LETTER PAGE
   ===================================================================== */
   .paper-wrap{
     position:relative;width:100%;max-width:30rem;
     perspective:1400px;
-    padding:.35rem .25rem .6rem;
+    padding:.35rem .2rem .55rem;
   }
   .paper-3d-tilt{
     position:relative;width:100%;
     transform-style:preserve-3d;
     will-change:transform;
-    filter:drop-shadow(0 18px 28px rgba(55, 34, 16, 0.16));
   }
-  /* Lifted bottom-corner shadows so the white sheet curls visibly off the desk */
+  /* Soft natural corner lift shadows underneath the bottom corners of the sheet */
   .paper-3d-tilt::before,
   .paper-3d-tilt::after{
     content:"";
     position:absolute;
-    bottom:8px;
-    width:46%;
-    height:26px;
-    background:rgba(48, 28, 12, 0.34);
-    filter:blur(10px);
+    bottom:9px;
+    width:42%;
+    height:18px;
+    background:rgba(48, 30, 15, 0.15);
+    filter:blur(11px);
     z-index:0;
     pointer-events:none;
   }
   .paper-3d-tilt::before{
-    left:10px;
-    transform:rotate(-4deg) skewX(-10deg);
+    left:12px;
+    transform:rotate(-2.5deg);
   }
   .paper-3d-tilt::after{
     right:12px;
-    transform:rotate(4deg) skewX(10deg);
+    transform:rotate(2.5deg);
   }
 
   .paper, .letter-full{
     position:relative;
     z-index:1;
     display:flex;flex-direction:column;
-    background-color:#fffdf9;
-    border-radius:3px;
-    border:1.5px solid rgba(150, 120, 92, 0.48);
-    /* Multi-layered physical paper stack + deep desk shadow + warm deckled edge vignette */
+    background-color:var(--paper);
+    border-radius:2px;
+    border:1px solid rgba(180, 154, 128, 0.28);
+    /* Soft, natural physical sheet shadow resting on a warm desk */
     box-shadow:
-      0 1px 2px rgba(55, 34, 16, 0.14),
-      -3px 4px 0 -1px #f8f2e8,
-      -3px 4px 0 0 rgba(145, 115, 88, 0.42),
-      -6px 7px 0 -2px #f1e8da,
-      -6px 7px 0 -1px rgba(145, 115, 88, 0.32),
-      0 24px 48px -12px rgba(55, 34, 16, 0.24),
-      0 6px 16px -3px rgba(55, 34, 16, 0.12),
-      inset 0 0 44px rgba(210, 184, 154, 0.42),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.92);
-    padding:2.1rem 1.65rem 2.35rem;
+      0 1px 2px rgba(45, 28, 14, 0.05),
+      0 8px 20px -4px rgba(45, 28, 14, 0.08),
+      0 22px 44px -12px rgba(45, 28, 14, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 26px rgba(210, 188, 162, 0.14);
+    padding:2.2rem 1.85rem 2.45rem;
     min-height:56vh;
-    /* Unlined cotton paper with visible tactile fiber grain + subtle directional paper sheen */
+    /* Fine, organic cotton paper fiber grain + gentle natural lighting */
     background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.24  0 0 0 0.085 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E"),
-      linear-gradient(155deg, rgba(255,255,255,0.75) 0%, rgba(248,240,228,0.28) 48%, rgba(235,222,205,0.48) 100%);
-    background-size:200px 200px, 100% 100%;
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.45  0 0 0 0 0.36  0 0 0 0 0.28  0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E"),
+      linear-gradient(168deg, rgba(255,255,255,0.65) 0%, rgba(255,253,249,0.15) 50%, rgba(244,235,222,0.28) 100%);
+    background-size:220px 220px, 100% 100%;
     overflow:hidden;
-    transform:rotate(-0.3deg);
-    transition:background-color .35s ease;
+    transition:background-color .35s ease, box-shadow .35s ease;
   }
 
-  /* Single One-Part Half-Fold Crease (folded once in half, not 4 parts) */
+  .paper[data-theme="parchment"], .letter-full[data-theme="parchment"]{background-color:#fffefb;}
+  .paper[data-theme="blush"], .letter-full[data-theme="blush"]{background-color:#fff8f8;}
+  .paper[data-theme="sage"], .letter-full[data-theme="sage"]{background-color:#f7fbf6;}
+  .paper[data-theme="dusk"], .letter-full[data-theme="dusk"]{background-color:#f9f7fd;}
+
+  /* Whisper-soft single horizontal half-fold crease across the middle of the sheet */
   .paper::before, .letter-full::before{
     content:"";
     position:absolute;inset:0;
     pointer-events:none;z-index:1;
     background:
       linear-gradient(180deg,
-        rgba(255, 255, 255, 0.22) 0%,
-        rgba(130, 102, 76, 0.04) 48.6%,
-        rgba(115, 88, 62, 0.11) 49.8%,
-        rgba(255, 255, 255, 0.95) 50.2%,
-        rgba(255, 255, 255, 0.18) 51.4%,
-        rgba(135, 108, 82, 0.03) 100%
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(145, 118, 92, 0.015) 49.2%,
+        rgba(135, 108, 82, 0.048) 49.9%,
+        rgba(255, 255, 255, 0.72) 50.1%,
+        rgba(255, 255, 255, 0.08) 50.9%,
+        rgba(145, 118, 92, 0.015) 100%
       );
   }
 
-  /* Subtle Curled Bottom-Right Paper Corner (without clipping outer paper shadows) */
   .paper::after, .letter-full::after{
-    content:"";
-    position:absolute;
-    right:-1px;bottom:-1px;
-    width:28px;height:28px;
-    pointer-events:none;z-index:4;
-    background:linear-gradient(135deg, #efe5d6 0%, #fffdf9 46%, rgba(135,108,82,.38) 49%, var(--bg-0) 51%, var(--bg-0) 100%);
-    box-shadow:-3px -3px 8px rgba(55, 34, 16, 0.16);
-    border-top:1px solid rgba(150, 120, 92, 0.42);
-    border-left:1px solid rgba(150, 120, 92, 0.42);
-    border-top-left-radius:4px;
+    display:none;
   }
 
   .script-label{
@@ -1338,7 +1327,7 @@
     <!-- ================= CREATE VIEW (2-STEP: WRITE FIRST, DECORATE AFTER) ================= -->
     <section id="createView">
       <div class="brand">
-        <span class="step-pill" id="createStepPill">Step 1 of 2 &bull; Just Write</span>
+        <span class="step-pill" id="createStepPill">Just Write</span>
         <h1 id="createHeading">Write what your heart keeps holding back.</h1>
       </div>
 
@@ -2190,7 +2179,7 @@
 
   function enterWriteStep(){
     createView.classList.remove('decorate-mode');
-    createStepPill.textContent = 'Step 1 of 2 \u2022 Just Write';
+    createStepPill.textContent = 'Just Write';
     createHeading.textContent = 'Write what your heart keeps holding back.';
     document.querySelectorAll('.sticker.selected').forEach(function(s){ s.classList.remove('selected'); });
   }
@@ -2205,7 +2194,7 @@
     }
     nudgePopover.classList.remove('open');
     createView.classList.add('decorate-mode');
-    createStepPill.textContent = 'Step 2 of 2 \u2022 Add Flowers & Seal';
+    createStepPill.textContent = 'Add Flowers & Seal';
     createHeading.textContent = 'Now tuck a flower or bouquet onto your letter.';
 
     // Place a delicate rose stem on the corner automatically the first time they enter decorate mode
