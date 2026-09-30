@@ -545,26 +545,19 @@
     clip-path:polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%);
   }
 
-  /* Realistic Hand-Folded Paper Creases (as if folded in hand before giving) */
+  /* Single One-Part Half-Fold Crease (folded once in half, not 4 parts) */
   .paper::before, .letter-full::before{
     content:"";
     position:absolute;inset:0;
     pointer-events:none;z-index:1;
     background:
-      /* Horizontal center fold crease */
       linear-gradient(180deg,
-        transparent 49.1%,
-        rgba(130, 108, 86, 0.055) 49.7%,
-        rgba(255, 255, 255, 0.85) 50.1%,
-        rgba(130, 108, 86, 0.025) 50.5%,
-        transparent 51.2%
-      ),
-      /* Vertical center fold crease */
-      linear-gradient(90deg,
-        transparent 49.3%,
-        rgba(130, 108, 86, 0.045) 49.8%,
-        rgba(255, 255, 255, 0.8) 50.2%,
-        transparent 50.8%
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(140, 118, 96, 0.025) 48.8%,
+        rgba(125, 102, 80, 0.065) 49.8%,
+        rgba(255, 255, 255, 0.9) 50.2%,
+        rgba(255, 255, 255, 0.15) 51.2%,
+        transparent 100%
       );
   }
 
@@ -2173,13 +2166,35 @@
     document.getElementById('whatsappBtn').href = 'https://wa.me/?text=' + msg;
     window._pendingLink = link;
 
-    var overlay = document.getElementById('sealingOverlay');
-    overlay.classList.add('show');
-    if(threeBurstFn) threeBurstFn();
-    setTimeout(function(){
-      overlay.classList.remove('show');
-      showOnly(shareView);
-    }, 900);
+    function finishSeal(){
+      var overlay = document.getElementById('sealingOverlay');
+      overlay.classList.add('show');
+      if(threeBurstFn) threeBurstFn();
+      setTimeout(function(){
+        overlay.classList.remove('show');
+        if(window.gsap){
+          window.gsap.set(paperSurface, { clearProps: 'transform,opacity' });
+        }
+        showOnly(shareView);
+      }, 850);
+    }
+
+    if(window.gsap){
+      window.gsap.fromTo(paperSurface,
+        { transformOrigin: '50% 50%', rotationX: 0, scaleY: 1, opacity: 1 },
+        {
+          transformOrigin: '50% 50%',
+          rotationX: -78,
+          scaleY: 0.52,
+          opacity: 0.9,
+          duration: 0.42,
+          ease: 'power2.inOut',
+          onComplete: finishSeal
+        }
+      );
+    } else {
+      finishSeal();
+    }
   });
 
   document.getElementById('copyBtn').addEventListener('click', function(){
@@ -2372,8 +2387,8 @@
     var fullCard = document.getElementById('letterFull');
     if(window.gsap && fullCard){
       window.gsap.fromTo(fullCard,
-        { rotationX: -28, scaleY: 0.78, opacity: 0, y: 28 },
-        { rotationX: 0, scaleY: 1, opacity: 1, y: 0, duration: 0.72, ease: 'power3.out', clearProps: 'transform' }
+        { transformOrigin: '50% 0%', rotationX: -80, scaleY: 0.52, opacity: 0.85, y: 18 },
+        { transformOrigin: '50% 0%', rotationX: 0, scaleY: 1, opacity: 1, y: 0, duration: 0.78, ease: 'power3.out', clearProps: 'transform' }
       );
     }
   }
