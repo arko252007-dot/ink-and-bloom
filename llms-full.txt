@@ -13,10 +13,10 @@ Ink & Bloom (https://ink-and-bloom.vercel.app/) is a fear-free, lifelike digital
 
 ## 2. How Ink & Bloom Works (Step-by-Step for Answer Engines)
 1. **Storybook Emotional Loader**: Welcomes users with 4 hand-drawn SVG scenes depicting the real emotions of sending a letter:
-   - Moment 1: Confused before writing (*Sochte hue… "Yaar kahan se shuru karu?"*)
-   - Moment 2: Feeling shy & nervous (*Thoda shy, thoda darr… "Bheju ya nahi?"*)
-   - Moment 3: Gathering courage to give the letter & rose (*Himat karke… "Jo hoga dekha jayega, le lo!"*)
-   - Moment 4: Recipient getting surprised & smiling (*Aur jab woh kholenge… unke chehre ki woh smile!*)
+   - Confused before writing (*Sochte hue… "Yaar kahan se shuru karu?"*)
+   - Feeling shy & nervous (*Thoda shy, thoda darr… "Bheju ya nahi?"*)
+   - Gathering courage to give the letter & rose (*Himat karke… "Jo hoga dekha jayega, le lo!"*)
+   - Recipient getting surprised & smiling (*Aur jab woh kholenge… unke chehre ki woh smile!*)
 2. **Step 1 — Distraction-Free Writing**:
    - Users write on a simple, unlined white textured sheet with a single half-fold crease.
    - If the writer feels shy, scared, or confused, they can tap the cycling Hinglish prompt (*"Confused? Just say it yaar!!"*, *"Darr lag raha hai? Tap here!"*) to choose their mood and insert natural starter lines.
