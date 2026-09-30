@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+<meta name="theme-color" content="#fbeee9">
+<title>Ink &amp; Bloom — a letter for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js" defer></script>
+<style>
+  :root{
+    --bg-0:#fffdf8;
+    --bg-1:#fbeee9;
+    --paper:#cda36c;
+    --paper-2:#bd8f57;
+    --ink:#3e2914;
+    --ink-soft:#6e5138;
+    --rose:#c17b7f;
+    --rose-deep:#a13c42;
+    --sage:#7d9370;
+    --lavender:#9c85b3;
+    --gold:#ab8442;
+    --seal:#8c3b3f;
+    --line:#9c7444;
+    --doodle:#4a3221;
+    --active-ink:#3e2914;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg-0:#f6ecdf;
+      --bg-1:#f2ddd2;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg-0:#f6ecdf;
+    --bg-1:#f2ddd2;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  html{
+    scroll-padding-top:env(safe-area-inset-top,0px);
+    -webkit-text-size-adjust:100%;
+  }
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  body{
+    margin:0;
+    min-height:100%;
+    min-height:100dvh;
+    background:
+      radial-gradient(ellipse at 20% 10%, var(--bg-1), transparent 60%),
+      radial-gradient(ellipse at 85% 90%, var(--bg-1), transparent 55%),
+      var(--bg-0);
+    color:var(--ink);
+    font-family:'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+    overflow-x:hidden;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  input, textarea, #fullBody, #linkOutput {
+    user-select:text;
+    -webkit-user-select:text;
+  }
+
+  #app{
+    position:relative;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- 3D WebGL Floating Petals & Dust Canvas ---------- */
+  #ambient3d{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+    pointer-events:none;
+  }
+
+  /* ---------- ambient watercolor wash (quiet, background only) ---------- */
+  .wash{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .blob{position:absolute;filter:blur(26px);opacity:.28;mix-blend-mode:multiply;will-change:transform;}
+  .blob.b1{width:42vw;height:42vw;min-width:220px;min-height:220px;top:-10vw;left:-12vw;background:radial-gradient(circle,var(--rose),transparent 70%);}
+  .blob.b2{width:48vw;height:48vw;min-width:250px;min-height:250px;bottom:-16vw;right:-14vw;background:radial-gradient(circle,var(--sage),transparent 70%);}
+  .blob.b3{width:34vw;height:34vw;min-width:190px;min-height:190px;bottom:20vh;left:-10vw;background:radial-gradient(circle,var(--lavender),transparent 70%);}
+  .paper-grain{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    opacity:.22;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.27  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- hand-drawn doodles scattered across the bright background ---------- */
+  .doodles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+  .doodle{position:absolute;display:block;height:auto;stroke:var(--doodle);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.2;will-change:transform;}
+  .doodle.d1{width:56px;top:7%;left:6%;transform:rotate(-8deg);}
+  .doodle.d2{width:34px;top:14%;right:10%;transform:rotate(10deg);}
+  .doodle.d3{width:44px;top:38%;left:3%;transform:rotate(6deg);}
+  .doodle.d4{width:30px;top:60%;right:6%;transform:rotate(-14deg);}
+  .doodle.d5{width:40px;bottom:14%;left:10%;transform:rotate(4deg);}
+  .doodle.d6{width:26px;bottom:8%;right:14%;transform:rotate(-6deg);}
+  .doodle.d7{width:48px;top:84%;left:44%;transform:rotate(12deg);}
+  .doodle.d8{width:22px;top:4%;left:44%;transform:rotate(-4deg);}
+  @media (max-width:520px){
+    .doodle.d3, .doodle.d6, .doodle.d8{display:none;}
+  }
+
+  /* ---------- Top Sanctuary Bar (Comfort & Reassurance) ---------- */
+  .sanctuary-bar{
+    position:relative;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:calc(.55rem + env(safe-area-inset-top,0px)) 1rem .4rem;
+    max-width:42rem;
+    width:100%;
+    margin:0 auto;
+    pointer-events:auto;
+  }
+  .sanctuary-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.35rem;
+    font-size:.86rem;
+    color:var(--ink-soft);
+    background:rgba(255,253,248,.62);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(156,116,68,.25);
+    padding:.28rem .7rem;
+    border-radius:999px;
+    font-style:italic;
+  }
+  .sanctuary-badge .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--sage);
+    box-shadow:0 0 0 3px rgba(125,147,112,.22);
+  }
+  .sound-btn{
+    appearance:none;
+    border:1px solid rgba(156,116,68,.3);
+    background:rgba(255,253,248,.65);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    color:var(--ink-soft);
+    border-radius:999px;
+    padding:.3rem .75rem;
+    font-size:.85rem;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:.3rem;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .sound-btn:active{transform:scale(.94);}
+
+  main{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;}
+
+  h1,h2,h3{font-weight:600;margin:0;}
+  .hand{font-family:'Caveat',cursive;}
+  button{font-family:inherit;}
+
+  /* ---------- small ui atoms (Mobile Touch Optimized) ---------- */
+  .pill-btn{
+    appearance:none;border:1px solid var(--ink-soft);
+    background:var(--paper);color:var(--ink);
+    padding:.78em 1.55em;border-radius:999px;
+    min-height:46px;
+    font-size:1.08rem;font-weight:600;letter-spacing:.01em;
+    cursor:pointer;
+    transition:transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, background .2s ease;
+    box-shadow:0 3px 0 var(--ink-soft), 0 8px 20px rgba(62,41,20,.14);
+    display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+    text-decoration:none;
+    touch-action:manipulation;
+  }
+  .pill-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-soft);}
+  .pill-btn.solid{
+    background:linear-gradient(180deg, #b04349 0%, var(--rose-deep) 100%);
+    border-color:#7c292e;color:#fdf3e7;
+    box-shadow:0 3px 0 #6d2226, 0 10px 24px rgba(161,60,66,.28);
+  }
+  .pill-btn.solid:active{box-shadow:0 1px 0 #6d2226;}
+  .pill-btn.ghost{
+    background:rgba(255,253,248,.65);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .pill-btn:focus-visible{outline:3px solid var(--lavender);outline-offset:2px;}
+
+  /* =====================================================================
+     INTRO VIEW — 3D Floating Wax-Sealed Keepsake + Fear-Free Welcome
+  ===================================================================== */
+  #introView{
+    display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
+    padding:1rem 1.3rem calc(2rem + env(safe-area-inset-bottom,0px));
+    text-align:center;
+  }
+  .intro-card{max-width:27rem;width:100%;display:flex;flex-direction:column;align-items:center;}
+  .intro-card .kicker{font-family:'Caveat',cursive;font-size:1.75rem;color:var(--rose-deep);display:block;margin-bottom:.2rem;}
+  .intro-card h1{font-size:clamp(2.05rem,7.8vw,2.75rem);line-height:1.14;letter-spacing:-.01em;}
+  .intro-card p{color:var(--ink-soft);font-size:1.12rem;line-height:1.58;margin:.95rem 0 1.2rem;font-style:italic;}
+
+  /* 3D Hero Artifact on Intro */
+  .hero-3d-wrap{
+    perspective:1200px;
+    margin:0.4rem auto 1.2rem;
+    width:210px;
+    height:142px;
+    position:relative;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .hero-3d-env{
+    width:100%;
+    height:100%;
+    position:relative;
+    transform-style:preserve-3d;
+    transform:rotateX(14deg) rotateY(-12deg) rotateZ(-2deg);
+    box-shadow:0 24px 36px -12px rgba(45,26,10,.42), 0 4px 10px rgba(45,26,10,.18);
+    border-radius:7px;
+    background:linear-gradient(155deg, #d7b07b 0%, var(--paper) 55%, var(--paper-2) 100%);
+    border:1px solid rgba(110,72,32,.35);
+  }
+  .hero-3d-env::before{
+    content:"";
+    position:absolute;inset:0;
+    border-radius:7px;
+    background:
+      linear-gradient(to top right, transparent 49.2%, rgba(120,80,35,.35) 49.8%, rgba(120,80,35,.35) 50.4%, transparent 51%),
+      linear-gradient(to top left, transparent 49.2%, rgba(120,80,35,.35) 49.8%, rgba(120,80,35,.35) 50.4%, transparent 51%);
+  }
+  .hero-3d-flap{
+    position:absolute;top:0;left:0;right:0;height:64%;
+    background:linear-gradient(190deg, #dcba88, var(--paper-2));
+    clip-path:polygon(0 0, 100% 0, 50% 94%);
+    transform:translateZ(3px);
+    filter:drop-shadow(0 4px 5px rgba(40,22,8,.28));
+  }
+  .hero-3d-twine{
+    position:absolute;left:0;right:0;top:52%;height:2px;
+    background:repeating-linear-gradient(90deg, #8b633b 0 4px, #b0885a 4px 8px);
+    transform:translateZ(5px);
+    opacity:.75;
+  }
+  .hero-3d-flower{
+    position:absolute;top:24%;left:64%;
+    font-size:1.65rem;
+    transform:translateZ(8px) rotate(22deg);
+    filter:drop-shadow(0 3px 4px rgba(40,22,8,.3));
+  }
+  .hero-3d-seal{
+    position:absolute;left:50%;top:52%;
+    width:2.7rem;height:2.7rem;border-radius:50%;
+    transform:translate(-50%,-50%) translateZ(12px);
+    background:radial-gradient(circle at 32% 30%, #b85256, var(--seal) 65%, #5c1f22 100%);
+    box-shadow:0 4px 10px rgba(35,12,12,.45), inset 0 1px 2px rgba(255,210,200,.4);
+    display:flex;align-items:center;justify-content:center;
+    color:#f7dfd2;font-size:1.05rem;
+    border:2px solid rgba(120,40,44,.6);
+  }
+  .hero-3d-glare{
+    position:absolute;inset:0;border-radius:7px;
+    background:radial-gradient(circle at 30% 20%, rgba(255,255,255,.32), transparent 60%);
+    pointer-events:none;
+    transform:translateZ(14px);
+  }
+
+  .intro-quote-box{
+    position:relative;
+    padding:.55rem 1rem;
+    margin:0 0 1.35rem;
+    border-radius:14px;
+    background:rgba(255,253,248,.55);
+    border:1px dashed rgba(161,60,66,.28);
+    cursor:pointer;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .intro-quote-box:active{transform:scale(.98);}
+  .intro-card .intro-quote{
+    font-family:'Caveat',cursive;font-style:normal;font-size:1.52rem;
+    color:var(--rose-deep);line-height:1.35;margin:0;
+  }
+  .intro-quote-hint{
+    display:block;font-size:.78rem;color:var(--ink-soft);opacity:.75;margin-top:.2rem;
+  }
+  .intro-card .intro-note{
+    font-size:.95rem;color:var(--ink-soft);opacity:.9;margin:1rem 0 0;font-style:italic;
+    max-width:22rem;line-height:1.45;
+  }
+
+  /* =====================================================================
+     CREATE VIEW — Lifelike 3D Paper Desk + Fear-Free Emotion Guides
+  ===================================================================== */
+  #createView{
+    display:none;flex:1;flex-direction:column;align-items:center;
+    padding:.6rem 1rem calc(2.6rem + env(safe-area-inset-bottom,0px));
+  }
+  .brand{text-align:center;margin-bottom:1rem;max-width:34rem;}
+  .brand .kicker{font-family:'Caveat',cursive;font-size:1.45rem;color:var(--rose-deep);display:block;margin-bottom:.1rem;}
+  .brand h1{font-size:clamp(1.75rem,6.5vw,2.45rem);line-height:1.15;}
+  .brand p{color:var(--ink-soft);font-size:1.04rem;margin:.35rem 0 0;font-style:italic;}
+
+  /* Fear-Free Emotion Prompt Strip ("Heart Whispers") */
+  .emotion-sanctuary{
+    width:100%;max-width:30rem;
+    margin-bottom:.85rem;
+    background:rgba(255,253,248,.72);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(156,116,68,.28);
+    border-radius:16px;
+    padding:.65rem .8rem;
+    box-shadow:0 6px 18px rgba(62,41,20,.06);
+  }
+  .emotion-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:.45rem;
+    font-size:.9rem;color:var(--ink-soft);
+  }
+  .emotion-header strong{
+    color:var(--rose-deep);font-weight:600;font-size:.95rem;
+  }
+  .emotion-pills{
+    display:flex;gap:.45rem;overflow-x:auto;
+    padding:.15rem .05rem .25rem;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .emotion-pills::-webkit-scrollbar{display:none;}
+  .emotion-pill{
+    flex:0 0 auto;
+    appearance:none;
+    border:1px solid rgba(156,116,68,.35);
+    background:var(--bg-0);
+    color:var(--ink);
+    border-radius:999px;
+    padding:.38rem .82rem;
+    font-size:.92rem;
+    cursor:pointer;
+    transition:all .18s ease;
+    display:inline-flex;align-items:center;gap:.3rem;
+    white-space:nowrap;
+  }
+  .emotion-pill.active, .emotion-pill:active{
+    background:var(--rose-deep);
+    color:#fffdf8;
+    border-color:var(--rose-deep);
+    transform:translateY(-1px);
+  }
+  .whisper-drawer{
+    display:none;
+    margin-top:.55rem;
+    padding:.65rem .75rem;
+    border-radius:12px;
+    background:rgba(251,238,233,.75);
+    border:1px dashed rgba(161,60,66,.35);
+    animation:fadeSlideIn .25s ease;
+  }
+  .whisper-drawer.open{display:block;}
+  @keyframes fadeSlideIn{
+    from{opacity:0;transform:translateY(-4px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .whisper-reassure{
+    font-size:.85rem;color:var(--ink-soft);font-style:italic;margin:0 0 .4rem;
+  }
+  .whisper-suggestion{
+    font-family:'Caveat',cursive;
+    font-size:1.32rem;
+    color:var(--ink);
+    line-height:1.35;
+    margin:.2rem 0 .55rem;
+    padding:.35rem .5rem;
+    background:rgba(255,253,248,.75);
+    border-radius:8px;
+    border-left:3px solid var(--rose-deep);
+  }
+  .whisper-actions{
+    display:flex;gap:.5rem;flex-wrap:wrap;
+  }
+  .whisper-btn{
+    appearance:none;
+    border:1px solid rgba(161,60,66,.35);
+    background:#fffdf8;
+    color:var(--rose-deep);
+    border-radius:999px;
+    padding:.28rem .75rem;
+    font-size:.84rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .whisper-btn.primary{
+    background:var(--rose-deep);
+    color:#fffdf8;
+    border-color:var(--rose-deep);
+  }
+
+  /* ---------- The 3D Paper Editing Surface ---------- */
+  .paper-wrap{
+    position:relative;width:100%;max-width:30rem;
+    perspective:1400px;
+    margin:0 auto;
+  }
+  .paper-3d-tilt{
+    position:relative;
+    width:100%;
+    transform-style:preserve-3d;
+    will-change:transform;
+    filter:drop-shadow(0 22px 32px rgba(40,22,8,.38));
+  }
+  .torn-edge{
+    clip-path:polygon(
+      0% 1.2%,3% 0%,8% 1.1%,14% 0%,20% 1.3%,27% 0%,34% 1%,41% 0%,48% 1.4%,55% 0%,62% 1%,69% 0%,76% 1.3%,83% 0%,90% .8%,97% 0%,100% 1.4%,
+      99.2% 8%,100% 15%,99.1% 22%,100% 30%,99.2% 38%,100% 46%,99.1% 54%,100% 62%,99.2% 70%,100% 78%,99.1% 86%,100% 94%,99.2% 98.5%,
+      96% 100%,90% 99.1%,83% 100%,76% 99.1%,69% 100%,62% 99.1%,55% 100%,48% 99.1%,41% 100%,34% 99.1%,27% 100%,20% 99.1%,13% 100%,6% 99.1%,0% 100%,
+      .8% 94%,0% 86%,.9% 78%,0% 70%,.8% 62%,0% 54%,.9% 46%,0% 38%,.8% 30%,0% 22%,.9% 14%,0% 6%
+    );
+  }
+  .paper{
+    position:relative;
+    display:flex;flex-direction:column;
+    background:var(--paper);
+    padding:1.6rem 1.25rem 1.85rem;
+    min-height:54vh;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      radial-gradient(ellipse at top right, rgba(255,255,255,.35), transparent 55%);
+    background-size:100% 2.1rem, 100% 100%;
+    background-position:0 4.4rem, 0 0;
+    overflow:hidden;
+    transition:background-color .35s ease;
+  }
+  /* Realistic fold creases & vintage tea stains */
+  .paper::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      linear-gradient(180deg,
+        transparent 32.8%,
+        rgba(55,32,12,.11) 33.2%,
+        rgba(255,250,240,.22) 33.5%,
+        transparent 34%,
+        transparent 66.2%,
+        rgba(55,32,12,.10) 66.6%,
+        rgba(255,250,240,.2) 66.9%,
+        transparent 67.4%
+      );
+  }
+  .paper::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+    background-image:
+      radial-gradient(circle at 88% 76%, rgba(110,70,25,.36) 0%, rgba(110,70,25,.36) 3%, transparent 10%),
+      radial-gradient(circle at 10% 90%, rgba(100,62,22,.3) 0%, rgba(100,62,22,.3) 2%, transparent 8%),
+      radial-gradient(circle at 92% 12%, rgba(95,58,20,.26) 0%, transparent 7%),
+      radial-gradient(ellipse at 50% 0%, rgba(70,42,12,.45), transparent 22%),
+      radial-gradient(ellipse at 50% 100%, rgba(70,42,12,.45), transparent 22%),
+      radial-gradient(ellipse at 0% 50%, rgba(70,42,12,.4), transparent 16%),
+      radial-gradient(ellipse at 100% 50%, rgba(70,42,12,.4), transparent 16%);
+  }
+  /* Dynamic 3D light sheen across the paper */
+  .paper-sheen{
+    position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(circle at var(--sheen-x, 30%) var(--sheen-y, 20%), rgba(255,252,242,.28), transparent 55%);
+    mix-blend-mode:soft-light;
+  }
+
+  .paper-heart{
+    position:absolute;top:.9rem;left:50%;transform:translateX(-50%);
+    width:2.5rem;z-index:2;opacity:.85;pointer-events:none;
+  }
+  .paper-heart svg path{fill:var(--rose-deep);filter:drop-shadow(0 1px 2px rgba(80,30,30,.3));}
+  .paper-rose{
+    position:absolute;bottom:.4rem;left:.55rem;font-size:2.4rem;z-index:2;
+    transform:rotate(-18deg);filter:sepia(.55) saturate(1.3) contrast(1.05);
+    opacity:.9;pointer-events:none;
+  }
+
+  .script-label{
+    font-family:'Caveat',cursive;font-size:1.52rem;color:var(--active-ink);
+    white-space:nowrap;
+    transition:color .25s ease;
+  }
+  .tone-cycle-btn{
+    appearance:none;border:1px dashed rgba(62,41,20,.32);
+    background:rgba(255,253,248,.32);
+    color:var(--ink-soft);
+    border-radius:999px;
+    padding:.05rem .42rem;
+    font-size:.74rem;
+    cursor:pointer;
+    line-height:1.3;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .tone-cycle-btn:active{transform:scale(.92);background:rgba(255,253,248,.6);}
+
+  .salutation-line, .signoff-line{
+    position:relative;z-index:2;display:flex;align-items:baseline;flex-wrap:wrap;gap:.32rem;
+  }
+  .salutation-line{margin-top:2.1rem;}
+  .signoff-line{margin-top:.45rem;justify-content:flex-end;padding-right:.15rem;}
+  .inline-blank{
+    font-family:'Caveat',cursive;font-size:1.52rem;color:var(--active-ink);
+    background:transparent;border:none;border-bottom:2px dotted var(--ink-soft);
+    padding:0 .2rem;min-width:6.2rem;max-width:58%;
+    border-radius:0;
+    transition:border-color .2s ease, color .25s ease;
+  }
+  .inline-blank:focus{outline:none;border-bottom-color:var(--rose-deep);border-bottom-style:solid;}
+  .inline-blank::placeholder{color:#7a6043;opacity:.85;}
+
+  .paper textarea{
+    position:relative;z-index:2;
+    flex:1;width:100%;min-height:32vh;
+    background:transparent;border:none;resize:none;
+    font-family:'Caveat',cursive;font-size:1.52rem;line-height:2.1rem;
+    color:var(--active-ink);
+    padding-top:.45rem;
+    transition:color .25s ease;
+  }
+  .paper textarea:focus{outline:none;}
+  .paper textarea::placeholder{color:#7a6043;font-style:italic;opacity:.88;}
+
+  /* Paper footer status (draft saved + gentle word comfort) */
+  .paper-meta{
+    display:flex;align-items:center;justify-content:space-between;
+    width:100%;max-width:30rem;
+    padding:.38rem .35rem 0;
+    font-size:.82rem;color:var(--ink-soft);font-style:italic;
+  }
+  .draft-clear-btn{
+    appearance:none;border:none;background:transparent;
+    color:var(--ink-soft);text-decoration:underline;
+    font-size:.8rem;font-style:italic;cursor:pointer;padding:.2rem .3rem;
+  }
+
+  /* ---------- Interactive 3D Pressed Stickers ---------- */
+  .sticker{
+    position:absolute;font-size:2.2rem;line-height:1;
+    transform:translate(-50%,-50%);
+    cursor:grab;touch-action:none;user-select:none;z-index:3;
+    filter:drop-shadow(0 4px 3px rgba(50,30,10,.28));
+    padding:.25rem;
+    border-radius:10px;
+    transition:filter .15s ease;
+  }
+  .sticker:active{cursor:grabbing;filter:drop-shadow(0 8px 8px rgba(50,30,10,.38));}
+  .sticker.selected{
+    outline:1.5px dashed rgba(161,60,66,.75);
+    background:rgba(255,253,248,.22);
+  }
+  .sticker-controls{
+    position:absolute;top:-2.1rem;left:50%;transform:translateX(-50%);
+    display:none;align-items:center;gap:.25rem;
+    background:#fffdf8;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:.15rem .3rem;
+    box-shadow:0 4px 12px rgba(40,22,8,.25);
+    z-index:10;
+    white-space:nowrap;
+  }
+  .sticker.selected .sticker-controls{display:inline-flex;}
+  .sticker-ctrl-btn, .sticker .remove{
+    appearance:none;border:none;
+    width:1.55rem;height:1.55rem;border-radius:50%;
+    background:rgba(205,163,108,.35);color:var(--ink);
+    font-size:.8rem;line-height:1.55rem;
+    text-align:center;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:0;
+  }
+  .sticker .remove{
+    background:var(--seal);color:#fff;font-weight:700;
+  }
+  .sticker-ctrl-btn:active, .sticker .remove:active{transform:scale(.9);}
+
+  /* ---------- Mobile-First Craft Tray ---------- */
+  .tray{
+    width:100%;max-width:30rem;margin-top:.85rem;
+    display:flex;flex-direction:column;gap:.75rem;
+    background:rgba(255,253,248,.62);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(156,116,68,.26);
+    border-radius:18px;
+    padding:.8rem .85rem;
+  }
+  .tray-group{display:flex;flex-direction:column;gap:.32rem;}
+  .tray-row{
+    display:flex;gap:.5rem;overflow-x:auto;
+    padding:.18rem .1rem;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    align-items:center;
+  }
+  .tray-row::-webkit-scrollbar{display:none;}
+  .tray-btn{
+    flex:0 0 auto;width:3rem;height:3rem;border-radius:14px;
+    background:var(--paper-2);border:1px solid var(--line);
+    font-size:1.45rem;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 5px rgba(62,41,20,.12);
+    transition:transform .15s ease, background .15s ease;
+    touch-action:manipulation;
+  }
+  .tray-btn:active{transform:scale(.88);}
+  .tray-label{
+    font-size:.84rem;color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .tray-label span{opacity:.75;font-style:italic;font-size:.78rem;}
+
+  .craft-options-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));
+    gap:.65rem;
+  }
+  .swatches, .ink-swatches, .wax-swatches{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
+  .swatch{
+    width:2.45rem;height:2.45rem;border-radius:50%;border:2px solid rgba(62,41,20,.2);
+    cursor:pointer;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    touch-action:manipulation;
+  }
+  .swatch.active{
+    border-color:var(--ink);
+    transform:scale(1.08);
+    box-shadow:0 0 0 3px rgba(62,41,20,.15);
+  }
+  .swatch[data-theme="parchment"]{background:#cda36c;}
+  .swatch[data-theme="blush"]{background:#e8bfa8;}
+  .swatch[data-theme="sage"]{background:#c7c2a0;}
+  .swatch[data-theme="dusk"]{background:#c9ae9a;}
+  .swatch[data-theme="cream"]{background:#ead8bc;}
+
+  .ink-btn{
+    width:2.2rem;height:2.2rem;border-radius:50%;
+    border:2px solid rgba(255,253,248,.8);
+    box-shadow:0 2px 5px rgba(0,0,0,.2);
+    cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .ink-btn.active{
+    transform:scale(1.12);
+    box-shadow:0 0 0 2.5px var(--ink);
+  }
+
+  .wax-choice-btn{
+    width:2.35rem;height:2.35rem;border-radius:50%;
+    background:radial-gradient(circle at 32% 30%, #b44c50, var(--seal) 70%, #5e2023 100%);
+    color:#f7dfd2;
+    border:1.5px solid #6b2428;
+    font-size:.95rem;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 5px rgba(0,0,0,.22);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .wax-choice-btn.active{
+    transform:scale(1.12);
+    box-shadow:0 0 0 2.5px var(--gold), 0 4px 8px rgba(0,0,0,.28);
+  }
+
+  .create-actions{
+    width:100%;max-width:30rem;margin-top:1.25rem;
+    display:flex;flex-direction:column;align-items:center;gap:.45rem;
+  }
+  .create-actions .pill-btn{width:100%;max-width:20rem;font-size:1.15rem;}
+
+  /* =====================================================================
+     SHARE VIEW — Ready to Send Keepsake
+  ===================================================================== */
+  #shareView{
+    display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
+    padding:1.5rem 1.2rem calc(2rem + env(safe-area-inset-bottom,0px));text-align:center;
+  }
+  .share-card{
+    max-width:28rem;width:100%;
+    background:rgba(255,253,248,.74);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(156,116,68,.3);
+    border-radius:24px;
+    padding:1.8rem 1.3rem;
+    box-shadow:0 20px 40px -18px rgba(45,26,10,.25);
+    display:flex;flex-direction:column;align-items:center;
+  }
+  #shareView .seal-mini{
+    width:4.2rem;height:4.2rem;border-radius:50%;
+    background:radial-gradient(circle at 32% 30%, #b85256, var(--seal) 65%, #5c1f22 100%);
+    color:#f7dfd2;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.8rem;margin-bottom:.8rem;
+    box-shadow:0 8px 18px rgba(140,59,63,.38), inset 0 1px 3px rgba(255,220,210,.4);
+  }
+  #shareView h2{font-size:clamp(1.65rem,6vw,2.15rem);max-width:24rem;}
+  #shareView p{color:var(--ink-soft);max-width:25rem;margin:.5rem 0 1.25rem;font-style:italic;line-height:1.5;}
+  .link-box{
+    width:100%;max-width:26rem;display:flex;gap:.5rem;
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:.55rem .65rem;margin-bottom:1.15rem;
+    box-shadow:inset 0 2px 4px rgba(40,22,8,.12);
+  }
+  .link-box input{
+    flex:1;border:none;background:transparent;font-family:monospace;
+    font-size:.9rem;color:var(--ink);min-width:0;
+  }
+  .link-box input:focus{outline:none;}
+  .link-box button{
+    border:none;background:var(--rose-deep);color:#fff;border-radius:10px;
+    padding:.48rem .95rem;font-size:.9rem;font-weight:600;cursor:pointer;
+    min-height:38px;
+  }
+  .share-buttons{display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center;width:100%;}
+  .wa-btn{background:#356f50;border-color:#28573e;color:#fdf3e7;box-shadow:0 3px 0 #214833;}
+
+  /* =====================================================================
+     RECEIVE VIEW — 3D Interactive Envelope + Scissors & Wax Seal
+  ===================================================================== */
+  #receiveView{
+    display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
+    padding:1rem 1rem calc(1.5rem + env(safe-area-inset-bottom,0px));
+  }
+  .stage{
+    position:relative;width:100%;max-width:25rem;
+    perspective:1600px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+
+  .addr{text-align:center;margin-bottom:1.1rem;}
+  .addr .to-line{font-family:'Caveat',cursive;font-size:2.1rem;color:var(--ink);line-height:1.15;}
+  .addr .from-line{font-size:1.05rem;color:var(--ink-soft);margin-top:.2rem;font-style:italic;}
+
+  .envelope{
+    position:relative;width:100%;aspect-ratio:3/2;
+    margin:0 auto;
+    transform-style:preserve-3d;
+    will-change:transform;
+  }
+  .env-back{
+    position:absolute;inset:0;
+    background:var(--paper-2);
+    border-radius:8px;
+    box-shadow:0 26px 44px -14px rgba(40,25,10,.52), 0 6px 16px rgba(40,25,10,.22);
+    transform:translateZ(-2px);
+  }
+  /* Cut perforation line across top of envelope */
+  .env-cut-line{
+    position:absolute;top:8%;left:3%;right:3%;height:2px;
+    background:repeating-linear-gradient(90deg, rgba(62,41,20,.5) 0 6px, transparent 6px 12px);
+    z-index:6;pointer-events:none;
+    opacity:.65;
+  }
+  .env-cut-progress{
+    position:absolute;top:8%;left:3%;width:0%;height:3px;
+    background:var(--rose-deep);
+    z-index:7;pointer-events:none;
+    border-radius:2px;
+  }
+
+  .letter-peek{
+    position:absolute;left:6%;right:6%;bottom:6%;top:22%;
+    background:var(--paper);border-radius:5px 5px 2px 2px;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px);
+    background-size:100% 1.6rem;
+    box-shadow:0 -4px 12px rgba(40,25,10,.22);
+    transform:translateY(0%) translateZ(2px);
+    transition:transform .85s cubic-bezier(.2,.85,.2,1);
+    z-index:2;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    padding-top:.8rem;
+    cursor:pointer;
+    border:1px solid rgba(120,80,35,.3);
+  }
+  .letter-peek span{
+    font-family:'Caveat',cursive;color:var(--rose-deep);font-size:1.25rem;
+    background:rgba(255,253,248,.78);
+    padding:.2rem .85rem;border-radius:999px;
+    box-shadow:0 2px 8px rgba(40,25,10,.12);
+  }
+  .envelope.opened .letter-peek{
+    transform:translateY(-44%) translateZ(6px);
+  }
+
+  .env-body{
+    position:absolute;inset:0;
+    background:linear-gradient(160deg, var(--paper-2), var(--paper));
+    border-radius:8px;
+    overflow:hidden;
+    z-index:3;
+    transform:translateZ(4px);
+    pointer-events:none;
+    clip-path:polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);
+  }
+  .env-body::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:72%;
+    background:
+      linear-gradient(to top right, transparent 49.3%, var(--line) 49.7%, var(--line) 50.3%, transparent 50.7%),
+      linear-gradient(to top left, transparent 49.3%, var(--line) 49.7%, var(--line) 50.3%, transparent 50.7%);
+    opacity:.55;
+  }
+  .env-flap{
+    position:absolute;top:0;left:0;right:0;height:62%;
+    background:linear-gradient(200deg, var(--paper), var(--paper-2));
+    clip-path:polygon(0 0,100% 0,50% 92%);
+    transform-origin:top center;
+    transform:rotateX(0deg) translateZ(5px);
+    box-shadow:0 6px 12px -6px rgba(40,25,10,.4);
+    transition:transform 1s cubic-bezier(.55,-0.15,.25,1.35);
+    z-index:4;
+  }
+  .envelope.opened .env-flap{
+    transform:rotateX(178deg) translateZ(1px);
+    z-index:1;
+  }
+
+  .seal{
+    position:absolute;left:50%;top:42%;transform:translate(-50%,-50%) translateZ(10px);
+    width:4rem;height:4rem;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #b54e52, var(--seal) 65%, #632225 100%);
+    box-shadow:0 5px 12px rgba(0,0,0,.38), inset 0 1px 3px rgba(255,215,205,.45);
+    border:2px solid rgba(110,35,38,.6);
+    display:flex;align-items:center;justify-content:center;
+    color:#f7dfd2;font-size:1.45rem;
+    z-index:8;
+    cursor:pointer;
+    transition:opacity .45s ease, transform .45s ease;
+    touch-action:manipulation;
+  }
+  .seal::after{
+    content:"tap or cut";
+    position:absolute;bottom:-1.45rem;left:50%;transform:translateX(-50%);
+    font-family:'Caveat',cursive;font-size:.95rem;color:var(--ink-soft);
+    white-space:nowrap;opacity:.85;pointer-events:none;
+  }
+  .envelope.opened .seal{
+    opacity:0;pointer-events:none;
+    transform:translate(-50%,-50%) translateZ(10px) scale(.35) rotate(25deg);
+  }
+
+  .cut-rail{
+    margin-top:1.35rem;width:100%;max-width:22rem;
+    display:flex;flex-direction:column;align-items:center;gap:.45rem;
+  }
+  .cut-track{
+    position:relative;width:100%;height:3.1rem;
+    display:flex;align-items:center;
+    background:rgba(255,253,248,.55);
+    border-radius:999px;
+    padding:0 .35rem;
+    border:1px solid rgba(156,116,68,.3);
+  }
+  .cut-track::before{
+    content:"";position:absolute;left:1.6rem;right:1.6rem;top:50%;
+    border-top:2px dashed var(--ink-soft);opacity:.55;
+  }
+  .cut-hint{font-size:.95rem;color:var(--ink-soft);font-style:italic;}
+  .scissors{
+    position:absolute;top:50%;left:0;transform:translate(0,-50%);
+    width:3rem;height:3rem;border-radius:50%;
+    background:var(--paper);border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.35rem;touch-action:none;cursor:grab;
+    box-shadow:0 4px 10px rgba(40,25,10,.32);
+    z-index:3;
+  }
+  .scissors:active{cursor:grabbing;transform:translate(0,-50%) scale(1.08);}
+
+  /* =====================================================================
+     FULL LETTER OVERLAY — 3D Unfolding Stationery & Heartbeat Touch
+  ===================================================================== */
+  #letterView{
+    position:fixed;inset:0;z-index:30;
+    display:flex;flex-direction:column;
+    background:
+      radial-gradient(ellipse at 20% 10%, var(--bg-1), transparent 60%),
+      var(--bg-0);
+    opacity:0;pointer-events:none;
+    transform:translateY(3%);
+    transition:opacity .45s ease, transform .45s ease;
+  }
+  #letterView.open{opacity:1;pointer-events:auto;transform:translateY(0);}
+  .letter-close{
+    position:sticky;top:env(safe-area-inset-top,0px);z-index:10;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:.75rem 1rem .3rem;
+    max-width:34rem;width:100%;margin:0 auto;
+  }
+  .letter-scroll{
+    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:0 1rem 1rem;
+    perspective:1500px;
+  }
+  .letter-full{
+    position:relative;
+    max-width:31rem;margin:.6rem auto 1.5rem;
+    width:100%;
+    min-height:58vh;
+    background:var(--paper);
+    padding:2.6rem 1.45rem 3.2rem;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px);
+    background-size:100% 2.2rem;
+    background-position:0 4.8rem;
+    filter:drop-shadow(0 24px 36px rgba(30,18,8,.45));
+    transform-origin:top center;
+    transform-style:preserve-3d;
+  }
+  .letter-full::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      linear-gradient(180deg,
+        transparent 32.8%,
+        rgba(55,32,12,.12) 33.2%,
+        rgba(255,250,240,.22) 33.6%,
+        transparent 34.1%,
+        transparent 66.2%,
+        rgba(55,32,12,.11) 66.6%,
+        rgba(255,250,240,.2) 67%,
+        transparent 67.5%
+      );
+  }
+  .letter-full::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+    background-image:
+      radial-gradient(circle at 88% 80%, rgba(110,70,25,.38) 0%, rgba(110,70,25,.38) 2.4%, transparent 8%),
+      radial-gradient(circle at 8% 88%, rgba(100,62,22,.32) 0%, rgba(100,62,22,.32) 1.6%, transparent 6%),
+      radial-gradient(circle at 92% 10%, rgba(95,58,20,.28) 0%, transparent 6%),
+      radial-gradient(ellipse at 50% 0%, rgba(70,42,12,.45), transparent 20%),
+      radial-gradient(ellipse at 50% 100%, rgba(70,42,12,.45), transparent 20%),
+      radial-gradient(ellipse at 0% 50%, rgba(70,42,12,.4), transparent 15%),
+      radial-gradient(ellipse at 100% 50%, rgba(70,42,12,.4), transparent 15%);
+  }
+  .letter-full .salutation{
+    position:relative;z-index:2;font-family:'Caveat',cursive;
+    font-size:1.8rem;color:var(--active-ink);margin:1.35rem 0 .35rem;
+  }
+  .letter-full .body-text{
+    position:relative;z-index:2;
+    font-family:'Caveat',cursive;font-size:1.58rem;line-height:2.2rem;
+    color:var(--active-ink);white-space:pre-wrap;word-wrap:break-word;
+  }
+  .letter-full .sign-off{
+    position:relative;z-index:2;font-family:'Caveat',cursive;
+    font-size:1.62rem;color:var(--active-ink);margin-top:1.3rem;text-align:right;
+  }
+
+  /* Heartbeat Connection Button inside Received Letter */
+  .heartbeat-bar{
+    display:flex;flex-direction:column;align-items:center;gap:.35rem;
+    margin:0 auto .8rem;
+    max-width:26rem;
+    text-align:center;
+  }
+  .heartbeat-btn{
+    appearance:none;
+    border:1px solid rgba(161,60,66,.4);
+    background:rgba(251,238,233,.85);
+    color:var(--rose-deep);
+    border-radius:999px;
+    padding:.55rem 1.2rem;
+    font-size:.98rem;
+    font-weight:600;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:.4rem;
+    box-shadow:0 4px 14px rgba(161,60,66,.15);
+    touch-action:manipulation;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .heartbeat-btn.pulsing{
+    background:var(--rose-deep);
+    color:#fffdf8;
+    animation:heartPulse .85s infinite ease-in-out;
+  }
+  @keyframes heartPulse{
+    0%, 100%{transform:scale(1);}
+    25%{transform:scale(1.08);}
+    45%{transform:scale(.98);}
+    65%{transform:scale(1.05);}
+  }
+
+  .letter-cta{
+    display:flex;justify-content:center;gap:.65rem;flex-wrap:wrap;
+    padding:.4rem 1rem calc(1.4rem + env(safe-area-inset-bottom,0px));
+  }
+
+  /* ---------- 3D Sealing Ceremony Overlay ---------- */
+  #sealingOverlay{
+    position:fixed;inset:0;z-index:50;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(255,253,248,.92);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    opacity:0;pointer-events:none;
+    transition:opacity .35s ease;
+    perspective:1200px;
+  }
+  #sealingOverlay.show{opacity:1;pointer-events:auto;}
+  .ceremony-stage{
+    width:210px;height:146px;
+    position:relative;
+    transform-style:preserve-3d;
+    margin-bottom:1.2rem;
+  }
+  .ceremony-env{
+    position:absolute;inset:0;
+    background:linear-gradient(160deg, var(--paper-2), var(--paper));
+    border-radius:8px;
+    box-shadow:0 20px 38px rgba(40,22,8,.35);
+    border:1px solid rgba(120,80,35,.35);
+  }
+  .ceremony-letter{
+    position:absolute;left:8%;right:8%;top:10%;bottom:10%;
+    background:var(--paper);
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.18);
+    transform-origin:center bottom;
+  }
+  .ceremony-flap{
+    position:absolute;top:0;left:0;right:0;height:62%;
+    background:linear-gradient(200deg, var(--paper), var(--paper-2));
+    clip-path:polygon(0 0,100% 0,50% 92%);
+    transform-origin:top center;
+    transform:rotateX(170deg);
+  }
+  .ceremony-wax{
+    position:absolute;left:50%;top:46%;
+    width:3.4rem;height:3.4rem;border-radius:50%;
+    transform:translate(-50%,-50%) scale(0);
+    background:radial-gradient(circle at 35% 30%, #ba5054, var(--seal) 65%, #5e1f22 100%);
+    box-shadow:0 5px 14px rgba(0,0,0,.38);
+    display:flex;align-items:center;justify-content:center;
+    color:#f7dfd2;font-size:1.4rem;
+  }
+  #sealingOverlay .stamp{display:none;}
+  #sealingOverlay p{
+    font-family:'Caveat',cursive;font-size:1.65rem;color:var(--ink-soft);margin-top:.4rem;
+  }
+
+  @media (min-width:640px){
+    .brand h1{font-size:2.75rem;}
+    .paper{padding:2rem 1.8rem 2.2rem;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:.001ms !important;animation-duration:.001ms !important;}
+  }
+
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 3D WebGL Floating Botanical Petals & Warm Dust Canvas -->
+  <canvas id="ambient3d" aria-hidden="true"></canvas>
+
+  <div class="wash" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <div class="doodles" aria-hidden="true">
+    <svg class="doodle d1" viewBox="0 0 60 52"><path d="M30 48C10 34 4 22 10 13c5-8 16-6 20 2 4-8 15-10 20-2 6 9 0 21-20 35Z"/></svg>
+    <svg class="doodle d2" viewBox="0 0 60 60"><path d="M30 12c3 6 3 12 0 18 6-3 12-3 18 0-6 3-12 3-18 0 3 6 3 12 0 18-3-6-3-12 0-18-6 3-12 3-18 0 6-3 12-3 18 0-3-6-3-12 0-18Z"/></svg>
+    <svg class="doodle d3" viewBox="0 0 60 60"><path d="M8 30c6-14 20-22 34-18 10 3 14 13 8 20-5 6-14 5-16-2-2-6 3-11 9-8"/></svg>
+    <svg class="doodle d4" viewBox="0 0 40 40"><path d="M6 20 L34 20 M20 6 L20 34 M11 11 L29 29 M29 11 L11 29"/><circle cx="20" cy="20" r="2.2" fill="var(--doodle)" stroke="none"/></svg>
+    <svg class="doodle d5" viewBox="0 0 60 40"><path d="M4 26c6-14 14-20 20-14 4 4 0 10-6 8-4-2-2-8 4-8 10 0 20 8 26 16" stroke-dasharray="1 7"/></svg>
+    <svg class="doodle d6" viewBox="0 0 40 40"><path d="M6 20 L34 20 M20 6 L20 34 M11 11 L29 29 M29 11 L11 29"/><circle cx="20" cy="20" r="2.2" fill="var(--doodle)" stroke="none"/></svg>
+    <svg class="doodle d7" viewBox="0 0 60 60"><path d="M30 12c3 6 3 12 0 18 6-3 12-3 18 0-6 3-12 3-18 0 3 6 3 12 0 18-3-6-3-12 0-18-6 3-12 3-18 0 6-3 12-3 18 0-3-6-3-12 0-18Z"/></svg>
+    <svg class="doodle d8" viewBox="0 0 60 52"><path d="M30 48C10 34 4 22 10 13c5-8 16-6 20 2 4-8 15-10 20-2 6 9 0 21-20 35Z"/></svg>
+  </div>
+
+  <!-- Top Sanctuary Comfort Bar -->
+  <header class="sanctuary-bar">
+    <div class="sanctuary-badge" title="Nothing is ever stored on a server. Your words live only inside the link you share.">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Fear-free &amp; private to your link</span>
+    </div>
+    <button class="sound-btn" id="soundToggleBtn" type="button" aria-label="Toggle tactile paper sounds">
+      <span id="soundIcon">🔊</span>
+      <span id="soundLabel">Soft sounds</span>
+    </button>
+  </header>
+
+  <main>
+
+    <!-- ================= INTRO VIEW ================= -->
+    <section id="introView">
+      <div class="intro-card">
+        <span class="kicker">Ink &amp; Bloom</span>
+        <h1>A love letter, written by hand, sent as a link.</h1>
+
+        <!-- 3D Floating Wax-Sealed Envelope Artifact -->
+        <div class="hero-3d-wrap" id="hero3dWrap" title="Touch or tilt to feel the envelope">
+          <div class="hero-3d-env" id="hero3dEnv">
+            <div class="hero-3d-flap"></div>
+            <div class="hero-3d-twine"></div>
+            <div class="hero-3d-flower">🌷</div>
+            <div class="hero-3d-seal" id="hero3dSeal">♡</div>
+            <div class="hero-3d-glare" id="hero3dGlare"></div>
+          </div>
+        </div>
+
+        <p>Write on a page that still feels like paper. Press a few flowers into it, seal it with wax, and send it on &mdash; whoever opens it gets an envelope to cut open and a letter that unfolds just for them. No account, no judgment, nothing saved anywhere but the link itself.</p>
+
+        <div class="intro-quote-box" id="introQuoteBox" role="button" tabindex="0" aria-label="Tap for another gentle thought">
+          <p class="intro-quote" id="introQuote"></p>
+          <span class="intro-quote-hint">tap for another gentle whisper ↻</span>
+        </div>
+
+        <button class="pill-btn solid" id="startBtn">Ready to start? ✦</button>
+        <p class="intro-note">Small step, big feeling &mdash; write at your own pace, there's no wrong way to say what's in your heart.</p>
+      </div>
+    </section>
+
+    <!-- ================= CREATE VIEW ================= -->
+    <section id="createView">
+      <div class="brand">
+        <span class="kicker">Ink &amp; Bloom</span>
+        <h1>Write something only they'll understand.</h1>
+        <p>Take a slow breath. Whether it's a first confession or a quiet &ldquo;I miss you,&rdquo; this page is safe.</p>
+      </div>
+
+      <!-- Fear-Free Emotion Helper ("Heart Whispers") -->
+      <div class="emotion-sanctuary" aria-label="Gentle writing prompts">
+        <div class="emotion-header">
+          <span><strong>✨ Need a gentle nudge?</strong> Pick what your heart feels:</span>
+        </div>
+        <div class="emotion-pills" id="emotionPills">
+          <button type="button" class="emotion-pill" data-mood="confess">💗 Unspoken feelings</button>
+          <button type="button" class="emotion-pill" data-mood="miss">🌙 Missing you</button>
+          <button type="button" class="emotion-pill" data-mood="adore">🌷 Little things you do</button>
+          <button type="button" class="emotion-pill" data-mood="sorry">🤍 Soft apology</button>
+          <button type="button" class="emotion-pill" data-mood="justbecause">☀️ Just because</button>
+          <button type="button" class="emotion-pill" data-mood="forever">💍 Deep devotion</button>
+        </div>
+        <div class="whisper-drawer" id="whisperDrawer">
+          <p class="whisper-reassure" id="whisperReassure"></p>
+          <div class="whisper-suggestion" id="whisperText"></div>
+          <div class="whisper-actions">
+            <button type="button" class="whisper-btn primary" id="insertWhisperBtn">Place on my page ✦</button>
+            <button type="button" class="whisper-btn" id="nextWhisperBtn">Another whisper ↻</button>
+            <button type="button" class="whisper-btn" id="closeWhisperBtn">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Tactile Paper Surface -->
+      <div class="paper-wrap" id="paperWrap">
+        <div class="paper-3d-tilt" id="paperTilt">
+          <div class="paper torn-edge" id="paperSurface" data-theme="parchment">
+            <div class="paper-sheen" id="paperSheen" aria-hidden="true"></div>
+            <div class="paper-heart" aria-hidden="true"><svg viewBox="0 0 100 90"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg></div>
+            <div class="salutation-line">
+              <span class="script-label" id="salutationLabel">My dearest</span>
+              <input id="toInput" class="inline-blank" type="text" maxlength="30" placeholder="their name" autocomplete="off">
+              <span class="script-label">,</span>
+              <button type="button" class="tone-cycle-btn" id="cycleSalutationBtn" title="Change greeting tone">tone ↻</button>
+            </div>
+            <textarea id="letterText" placeholder="" maxlength="2000"></textarea>
+            <div class="signoff-line">
+              <button type="button" class="tone-cycle-btn" id="cycleSignoffBtn" title="Change sign-off tone">tone ↻</button>
+              <span class="script-label" id="signoffLabel">Forever yours,</span>
+              <input id="fromInput" class="inline-blank" type="text" maxlength="30" placeholder="your name" autocomplete="off">
+            </div>
+            <div class="paper-rose" aria-hidden="true">🥀</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-meta">
+        <span id="draftStatus">✦ Your words auto-save privately on your phone</span>
+        <button type="button" class="draft-clear-btn" id="clearDraftBtn">Fresh page</button>
+      </div>
+
+      <!-- Mobile-Ergonomic Craft & Decoration Tray -->
+      <div class="tray">
+        <div class="tray-group">
+          <div class="tray-label">
+            <strong>press botanicals &amp; keepsakes</strong>
+            <span>tap to place, drag on paper</span>
+          </div>
+          <div class="tray-row" id="stickerTray">
+            <button type="button" class="tray-btn" data-emoji="🌷" aria-label="Tulip">🌷</button>
+            <button type="button" class="tray-btn" data-emoji="🌸" aria-label="Cherry blossom">🌸</button>
+            <button type="button" class="tray-btn" data-emoji="🌹" aria-label="Rose">🌹</button>
+            <button type="button" class="tray-btn" data-emoji="🌼" aria-label="Daisy">🌼</button>
+            <button type="button" class="tray-btn" data-emoji="🌺" aria-label="Hibiscus">🌺</button>
+            <button type="button" class="tray-btn" data-emoji="🍃" aria-label="Leaves">🍃</button>
+            <button type="button" class="tray-btn" data-emoji="🌿" aria-label="Herb sprig">🌿</button>
+            <button type="button" class="tray-btn" data-emoji="🦋" aria-label="Butterfly">🦋</button>
+            <button type="button" class="tray-btn" data-emoji="🕊️" aria-label="Dove">🕊️</button>
+            <button type="button" class="tray-btn" data-emoji="🌙" aria-label="Crescent moon">🌙</button>
+            <button type="button" class="tray-btn" data-emoji="🎀" aria-label="Silk ribbon">🎀</button>
+            <button type="button" class="tray-btn" data-emoji="♡" aria-label="Heart">♡</button>
+            <button type="button" class="tray-btn" data-emoji="✦" aria-label="Sparkle star">✦</button>
+          </div>
+        </div>
+
+        <div class="craft-options-grid">
+          <div class="tray-group">
+            <div class="tray-label"><strong>paper tint</strong></div>
+            <div class="swatches">
+              <button type="button" class="swatch active" data-theme="parchment" aria-label="Parchment paper"></button>
+              <button type="button" class="swatch" data-theme="blush" aria-label="Blush paper"></button>
+              <button type="button" class="swatch" data-theme="sage" aria-label="Sage paper"></button>
+              <button type="button" class="swatch" data-theme="dusk" aria-label="Dusk paper"></button>
+              <button type="button" class="swatch" data-theme="cream" aria-label="Cream paper"></button>
+            </div>
+          </div>
+
+          <div class="tray-group">
+            <div class="tray-label"><strong>fountain ink</strong></div>
+            <div class="ink-swatches" id="inkSwatches">
+              <button type="button" class="ink-btn active" data-ink="#3e2914" style="background:#3e2914" aria-label="Espresso Brown Ink"></button>
+              <button type="button" class="ink-btn" data-ink="#721e28" style="background:#721e28" aria-label="Vintage Berry Ink"></button>
+              <button type="button" class="ink-btn" data-ink="#1f2f46" style="background:#1f2f46" aria-label="Midnight Indigo Ink"></button>
+              <button type="button" class="ink-btn" data-ink="#263d29" style="background:#263d29" aria-label="Forest Moss Ink"></button>
+            </div>
+          </div>
+
+          <div class="tray-group">
+            <div class="tray-label"><strong>wax seal stamp</strong></div>
+            <div class="wax-swatches" id="waxSwatches">
+              <button type="button" class="wax-choice-btn active" data-wax="♡" aria-label="Heart seal">♡</button>
+              <button type="button" class="wax-choice-btn" data-wax="🥀" aria-label="Rose seal">🥀</button>
+              <button type="button" class="wax-choice-btn" data-wax="✦" aria-label="Star seal">✦</button>
+              <button type="button" class="wax-choice-btn" data-wax="🕊️" aria-label="Dove seal">🕊️</button>
+              <button type="button" class="wax-choice-btn" data-wax="☾" aria-label="Moon seal">☾</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="create-actions">
+        <button type="button" class="pill-btn solid" id="sealBtn">Fold &amp; Seal with Wax ✦</button>
+      </div>
+    </section>
+
+    <!-- ================= SHARE VIEW ================= -->
+    <section id="shareView">
+      <div class="share-card" id="shareCard">
+        <div class="seal-mini" id="shareSealMini">♡</div>
+        <h2>Your letter is folded &amp; sealed.</h2>
+        <p>Send this private link to them &mdash; when they tap it on their phone, they'll hold your sealed envelope and unfold your words.</p>
+        <div class="link-box">
+          <input id="linkOutput" type="text" readonly aria-label="Shareable link">
+          <button type="button" id="copyBtn">Copy</button>
+        </div>
+        <div class="share-buttons">
+          <a class="pill-btn wa-btn" id="whatsappBtn" href="#" target="_blank" rel="noopener">Send on WhatsApp</a>
+          <button type="button" class="pill-btn solid" id="nativeShareBtn" style="display:none;">Share to App ✦</button>
+          <button type="button" class="pill-btn ghost" id="previewBtn">Preview as them</button>
+          <button type="button" class="pill-btn ghost" id="backToEditBtn">Keep editing</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RECEIVE VIEW ================= -->
+    <section id="receiveView">
+      <div class="stage" id="receiveStage">
+        <div class="addr">
+          <div class="to-line" id="addrTo">For you</div>
+          <div class="from-line" id="addrFrom"></div>
+        </div>
+        <div class="envelope" id="envelope">
+          <div class="env-back"></div>
+          <div class="env-cut-line" aria-hidden="true"></div>
+          <div class="env-cut-progress" id="envCutProgress" aria-hidden="true"></div>
+          <div class="letter-peek" id="letterPeek"><span>tap to unfold letter ✦</span></div>
+          <div class="env-flap" id="envFlap"></div>
+          <div class="env-body"></div>
+          <div class="seal" id="wax" role="button" tabindex="0" aria-label="Tap wax seal to open envelope">♡</div>
+        </div>
+        <div class="cut-rail">
+          <div class="cut-track">
+            <button type="button" class="scissors" id="scissors" aria-label="Drag to cut the envelope open">✂️</button>
+          </div>
+          <div class="cut-hint" id="cutHint">drag the scissors across &mdash; or tap the wax seal</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FULL LETTER OVERLAY ================= -->
+  <div id="letterView" data-lenis-prevent>
+    <div class="letter-close">
+      <span class="sanctuary-badge"><span class="dot"></span> Written by hand for you</span>
+      <button type="button" class="pill-btn ghost" id="closeLetterBtn">Close ✕</button>
+    </div>
+    <div class="letter-scroll" id="letterScroll">
+      <div class="letter-full torn-edge" id="letterFull">
+        <div class="paper-heart" aria-hidden="true"><svg viewBox="0 0 100 90"><path d="M50 82C20 62 4 44 4 26 4 10 18 2 32 8c8 3 14 10 18 18 4-8 10-15 18-18 14-6 28 2 28 18 0 18-16 36-46 56Z"/></svg></div>
+        <div class="salutation" id="fullSalutation">My dearest,</div>
+        <div class="body-text" id="fullBody"></div>
+        <div class="sign-off" id="fullSignoff"></div>
+        <div class="paper-rose" aria-hidden="true">🥀</div>
+      </div>
+
+      <div class="heartbeat-bar">
+        <button type="button" class="heartbeat-btn" id="heartbeatBtn">
+          <span>💗</span> <span id="heartbeatLabel">Hold to feel the warmth of this letter</span>
+        </button>
+      </div>
+    </div>
+    <div class="letter-cta">
+      <button type="button" class="pill-btn solid" id="writeBackBtn">Write a letter back ✦</button>
+    </div>
+  </div>
+
+  <!-- ================= 3D SEALING CEREMONY ================= -->
+  <div id="sealingOverlay">
+    <div class="ceremony-stage" id="ceremonyStage">
+      <div class="ceremony-env"></div>
+      <div class="ceremony-letter" id="ceremonyLetter"></div>
+      <div class="ceremony-flap" id="ceremonyFlap"></div>
+      <div class="ceremony-wax" id="ceremonyWax">♡</div>
+    </div>
+    <div class="stamp">💌</div>
+    <p id="sealingStatusText">folding your letter&hellip;</p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var introView = document.getElementById('introView');
+  var createView = document.getElementById('createView');
+  var shareView = document.getElementById('shareView');
+  var receiveView = document.getElementById('receiveView');
+  var letterView = document.getElementById('letterView');
+
+  var paperSurface = document.getElementById('paperSurface');
+  var paperTilt = document.getElementById('paperTilt');
+  var paperSheen = document.getElementById('paperSheen');
+  var letterText = document.getElementById('letterText');
+  var stickerTray = document.getElementById('stickerTray');
+  var fromInput = document.getElementById('fromInput');
+  var toInput = document.getElementById('toInput');
+  var salutationLabel = document.getElementById('salutationLabel');
+  var signoffLabel = document.getElementById('signoffLabel');
+
+  var stickers = []; // {emoji, x, y (percent), rot, scale}
+  var currentInk = '#3e2914';
+  var currentWax = '♡';
+
+  var SALUTATIONS = ['My dearest', 'To my favorite person', 'Hey you', 'Dear', 'To the one I adore'];
+  var SIGNOFFS = ['Forever yours,', 'With all my heart,', 'Always,', 'Yours truly,', 'Thinking of you,'];
+  var salIdx = 0;
+  var sigIdx = 0;
+
+  // ---------- 1. Tactile Sound & Haptics Engine (Web Audio API) ----------
+  var soundEnabled = true;
+  var audioCtx = null;
+
+  function getAudioCtx(){
+    if(!soundEnabled) return null;
+    if(!audioCtx){
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if(AudioContext) audioCtx = new AudioContext();
+    }
+    if(audioCtx && audioCtx.state === 'suspended'){
+      audioCtx.resume().catch(function(){});
+    }
+    return audioCtx;
+  }
+
+  function haptic(pattern){
+    try{
+      if(navigator.vibrate) navigator.vibrate(pattern);
+    }catch(e){}
+  }
+
+  function playPaperRustle(duration, pitch){
+    var ctx = getAudioCtx();
+    if(!ctx) return;
+    try{
+      var dur = duration || 0.16;
+      var bufferSize = Math.floor(ctx.sampleRate * dur);
+      var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for(var i = 0; i < bufferSize; i++){
+        var env = Math.sin((i / bufferSize) * Math.PI);
+        data[i] = (Math.random() * 2 - 1) * env * 0.14;
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = pitch || 950;
+      filter.Q.value = 1.4;
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.01, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + dur * 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start();
+    }catch(e){}
+  }
+
+  function playSoftChime(freq){
+    var ctx = getAudioCtx();
+    if(!ctx) return;
+    try{
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq || 528, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime((freq || 528) * 1.25, ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0008, ctx.currentTime + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.46);
+    }catch(e){}
+  }
+
+  function playWaxStampSound(){
+    var ctx = getAudioCtx();
+    if(!ctx) return;
+    try{
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(52, ctx.currentTime + 0.22);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.26);
+      setTimeout(function(){ playSoftChime(587.33); }, 120);
+    }catch(e){}
+  }
+
+  document.getElementById('soundToggleBtn').addEventListener('click', function(){
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+    document.getElementById('soundLabel').textContent = soundEnabled ? 'Soft sounds' : 'Quiet mode';
+    if(soundEnabled) playSoftChime(528);
+  });
+
+  // ---------- 2. Lenis Smooth Scrolling (Mobile & Desktop Tuned) ----------
+  var lenis = null;
+  function initLenis(){
+    if(window.Lenis && !lenis){
+      lenis = new window.Lenis({
+        duration: 1.05,
+        easing: function(t){ return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+        smoothWheel: true,
+        syncTouch: false,
+        touchMultiplier: 1.5
+      });
+      if(window.gsap && window.gsap.ticker){
+        window.gsap.ticker.add(function(time){
+          lenis.raf(time * 1000);
+        });
+        window.gsap.ticker.lagSmoothing(0);
+      } else {
+        function raf(time){
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+      }
+    }
+  }
+
+  // ---------- 3. Three.js 3D Floating Botanical Petals & Dust Scene ----------
+  var threeBurstFn = null;
+  function initThreeScene(){
+    var canvas = document.getElementById('ambient3d');
+    if(!window.THREE || !canvas) return;
+    var THREE = window.THREE;
+    var renderer;
+    try{
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
+    }catch(e){ return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 14;
+
+    // Create procedural soft petal texture on an offscreen canvas
+    var pCanvas = document.createElement('canvas');
+    pCanvas.width = 64; pCanvas.height = 64;
+    var pCtx = pCanvas.getContext('2d');
+    var grad = pCtx.createRadialGradient(32, 28, 4, 32, 32, 28);
+    grad.addColorStop(0, 'rgba(218, 132, 138, 0.95)');
+    grad.addColorStop(0.6, 'rgba(193, 123, 127, 0.75)');
+    grad.addColorStop(1, 'rgba(193, 123, 127, 0)');
+    pCtx.fillStyle = grad;
+    pCtx.beginPath();
+    pCtx.ellipse(32, 32, 22, 28, 0.2, 0, Math.PI * 2);
+    pCtx.fill();
+    var petalTex = new THREE.CanvasTexture(pCanvas);
+
+    var petals = [];
+    var petalGeo = new THREE.PlaneGeometry(0.48, 0.58, 2, 2);
+    // Slightly curve the vertices so each petal has real 3D cup curvature
+    var posAttr = petalGeo.attributes.position;
+    for(var v = 0; v < posAttr.count; v++){
+      var px = posAttr.getX(v);
+      var py = posAttr.getY(v);
+      posAttr.setZ(v, (px * px + py * py) * 0.65);
+    }
+    petalGeo.computeVertexNormals();
+
+    var palette = [0xc17b7f, 0xe8bfa8, 0xd49b9e, 0xab8442, 0x9c85b3];
+    var count = window.innerWidth < 600 ? 22 : 34;
+
+    for(var i = 0; i < count; i++){
+      var mat = new THREE.MeshBasicMaterial({
+        map: petalTex,
+        color: palette[i % palette.length],
+        transparent: true,
+        opacity: 0.35 + Math.random() * 0.3,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      var mesh = new THREE.Mesh(petalGeo, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 20,
+        (Math.random() - 0.5) * 18,
+        (Math.random() - 0.5) * 8
+      );
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      var sc = 0.55 + Math.random() * 0.85;
+      mesh.scale.set(sc, sc, sc);
+      mesh.userData = {
+        vy: -(0.008 + Math.random() * 0.014),
+        vx: (Math.random() - 0.5) * 0.008,
+        rx: (Math.random() - 0.5) * 0.02,
+        ry: (Math.random() - 0.5) * 0.022,
+        rz: (Math.random() - 0.5) * 0.015,
+        phase: Math.random() * Math.PI * 2
+      };
+      scene.add(mesh);
+      petals.push(mesh);
+    }
+
+    var targetCamX = 0, targetCamY = 0;
+    window.addEventListener('pointermove', function(e){
+      targetCamX = ((e.clientX / window.innerWidth) - 0.5) * 1.2;
+      targetCamY = -((e.clientY / window.innerHeight) - 0.5) * 1.2;
+    }, { passive: true });
+
+    window.addEventListener('deviceorientation', function(e){
+      if(e.gamma !== null && e.beta !== null){
+        targetCamX = Math.max(-1.5, Math.min(1.5, e.gamma / 25));
+        targetCamY = Math.max(-1.5, Math.min(1.5, (e.beta - 45) / 25));
+      }
+    }, { passive: true });
+
+    // Burst function when opening/sealing a letter
+    threeBurstFn = function(){
+      petals.forEach(function(p){
+        p.userData.vy = -0.025 - Math.random() * 0.03;
+        p.userData.rx *= 2.2;
+        p.userData.ry *= 2.2;
+      });
+      setTimeout(function(){
+        petals.forEach(function(p){
+          p.userData.vy = -(0.008 + Math.random() * 0.014);
+          p.userData.rx *= 0.45;
+          p.userData.ry *= 0.45;
+        });
+      }, 1800);
+    };
+
+    var clock = new THREE.Clock();
+    function animate(){
+      requestAnimationFrame(animate);
+      var elapsed = clock.getElapsedTime();
+      camera.position.x += (targetCamX - camera.position.x) * 0.04;
+      camera.position.y += (targetCamY - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
+
+      for(var i = 0; i < petals.length; i++){
+        var p = petals[i];
+        var u = p.userData;
+        p.position.y += u.vy;
+        p.position.x += u.vx + Math.sin(elapsed * 0.9 + u.phase) * 0.006;
+        p.rotation.x += u.rx;
+        p.rotation.y += u.ry;
+        p.rotation.z += u.rz;
+        if(p.position.y < -10){
+          p.position.y = 10;
+          p.position.x = (Math.random() - 0.5) * 20;
+        }
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', function(){
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  }
+
+  // ---------- 4. GSAP 3D Tilt & Floating Hero Envelope ----------
+  function init3DTiltInteractions(){
+    var heroEnv = document.getElementById('hero3dEnv');
+    var heroWrap = document.getElementById('hero3dWrap');
+    var receiveEnv = document.getElementById('envelope');
+
+    if(window.gsap && heroEnv){
+      // Continuous gentle 3D breathing levitation on Intro envelope
+      window.gsap.to(heroEnv, {
+        y: -8,
+        rotationX: 18,
+        rotationY: -8,
+        rotationZ: 1.5,
+        duration: 3.2,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
+
+      // Continuous gentle float on Receive envelope
+      if(receiveEnv){
+        window.gsap.to(receiveEnv, {
+          y: -6,
+          rotationX: 4,
+          rotationY: -3,
+          duration: 3.5,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+      }
+
+      // Background blobs slow organic drift
+      window.gsap.to('.blob.b1', { x: 25, y: 18, duration: 9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+      window.gsap.to('.blob.b2', { x: -22, y: -16, duration: 11, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+      window.gsap.to('.blob.b3', { x: 18, y: -24, duration: 10, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    }
+
+    if(heroWrap){
+      heroWrap.addEventListener('click', function(){
+        playWaxStampSound();
+        haptic(25);
+        if(window.gsap){
+          window.gsap.fromTo(heroEnv,
+            { scale: 0.94, rotationY: -22 },
+            { scale: 1, rotationY: -8, duration: 0.65, ease: 'elastic.out(1.1, 0.4)' }
+          );
+        }
+      });
+    }
+
+    // Subtle 3D tilt on the Create Paper Surface based on pointer/touch or gyroscope
+    function applyPaperTilt(normX, normY){
+      if(!paperTilt || !window.gsap) return;
+      window.gsap.to(paperTilt, {
+        rotationY: normX * 4.5,
+        rotationX: -normY * 3.5,
+        duration: 0.55,
+        ease: 'power2.out',
+        overwrite: 'auto'
+      });
+      if(paperSheen){
+        paperSheen.style.setProperty('--sheen-x', (50 + normX * 35) + '%');
+        paperSheen.style.setProperty('--sheen-y', (35 + normY * 35) + '%');
+      }
+    }
+
+    var paperWrap = document.getElementById('paperWrap');
+    if(paperWrap){
+      paperWrap.addEventListener('pointermove', function(e){
+        var rect = paperWrap.getBoundingClientRect();
+        var nx = ((e.clientX - rect.left) / rect.width) - 0.5;
+        var ny = ((e.clientY - rect.top) / rect.height) - 0.5;
+        applyPaperTilt(nx, ny);
+      }, { passive: true });
+      paperWrap.addEventListener('pointerleave', function(){
+        applyPaperTilt(0, 0);
+      }, { passive: true });
+    }
+
+    window.addEventListener('deviceorientation', function(e){
+      if(e.gamma !== null && e.beta !== null && createView.style.display === 'flex'){
+        var nx = Math.max(-0.5, Math.min(0.5, e.gamma / 45));
+        var ny = Math.max(-0.5, Math.min(0.5, (e.beta - 45) / 45));
+        applyPaperTilt(nx, ny);
+      }
+    }, { passive: true });
+  }
+
+  // ---------- 5. Fear-Free Emotion Helper ("Heart Whispers") ----------
+  var WHISPERS_BY_MOOD = {
+    confess: {
+      reassure: "Take a breath. You don't need grand poetry — honesty is the most disarming thing in the world.",
+      lines: [
+        "There is something I keep almost saying every time you look at me, so I'm writing it down before I lose my nerve...",
+        "I don't know the exact moment it happened, only that my favorite part of every day is now whichever part has you in it.",
+        "I've been keeping this quiet in my chest for a while, and I just wanted you to know how deeply you matter to me."
+      ]
+    },
+    miss: {
+      reassure: "Distance feels smaller when you name the small moments you miss.",
+      lines: [
+        "Something small happened today and my very first instinct was to turn and tell you — I miss you more than I say.",
+        "The quiet hours at the end of the day always belong to thoughts of you. I wish you were right here.",
+        "No matter how busy the day gets, there's a steady little ache where your laugh is supposed to be."
+      ]
+    },
+    adore: {
+      reassure: "People rarely hear the tiny things that make them unforgettable. Tell them one.",
+      lines: [
+        "I don't think you realize how effortlessly you make the room feel warmer just by being yourself.",
+        "I love the way your eyes light up when you talk about the things you care about — I could listen to you forever.",
+        "Thank you for all the quiet, gentle ways you make me feel safe without even trying."
+      ]
+    },
+    sorry: {
+      reassure: "A tender heart repairs things gently. Speak from care, not fear.",
+      lines: [
+        "I hate when there's even a tiny shadow between us. You mean far more to me than my pride ever could.",
+        "I've been replaying our conversation in my head, and what I really want you to know is how much I care about your heart.",
+        "Can we start fresh? All I ever want is for you to feel loved and understood when you're with me."
+      ]
+    },
+    justbecause: {
+      reassure: "The best letters arrive on an ordinary day for no reason at all.",
+      lines: [
+        "No special occasion today — I just paused in the middle of my day and felt so grateful that you exist in my life.",
+        "Just a little paper note to remind you that someone out here is hopelessly, quietly cheering for you and adoring you.",
+        "If you're having a long day, read this slowly: you are deeply loved, exactly as you are right now."
+      ]
+    },
+    forever: {
+      reassure: "Let your heart speak plainly — devotion feels safest when it's simple.",
+      lines: [
+        "In every version of the future I can picture, my heart always looks for you first.",
+        "Loving you has been the easiest, truest thing I have ever known. You are my home.",
+        "Whatever chapters come next for us, I want to read every single page with my hand in yours."
+      ]
+    }
+  };
+
+  var activeMood = null;
+  var activeMoodIndex = 0;
+  var whisperDrawer = document.getElementById('whisperDrawer');
+  var whisperReassure = document.getElementById('whisperReassure');
+  var whisperText = document.getElementById('whisperText');
+
+  document.getElementById('emotionPills').addEventListener('click', function(e){
+    var pill = e.target.closest('.emotion-pill');
+    if(!pill) return;
+    var mood = pill.getAttribute('data-mood');
+    document.querySelectorAll('.emotion-pill').forEach(function(p){ p.classList.remove('active'); });
+    pill.classList.add('active');
+    if(activeMood === mood){
+      activeMoodIndex = (activeMoodIndex + 1) % WHISPERS_BY_MOOD[mood].lines.length;
+    } else {
+      activeMood = mood;
+      activeMoodIndex = 0;
+    }
+    var m = WHISPERS_BY_MOOD[mood];
+    whisperReassure.textContent = m.reassure;
+    whisperText.textContent = '\u201C' + m.lines[activeMoodIndex] + '\u201D';
+    whisperDrawer.classList.add('open');
+    playPaperRustle(0.12, 1100);
+    haptic(15);
+  });
+
+  document.getElementById('nextWhisperBtn').addEventListener('click', function(){
+    if(!activeMood) return;
+    var m = WHISPERS_BY_MOOD[activeMood];
+    activeMoodIndex = (activeMoodIndex + 1) % m.lines.length;
+    whisperText.textContent = '\u201C' + m.lines[activeMoodIndex] + '\u201D';
+    playPaperRustle(0.1, 1200);
+  });
+
+  document.getElementById('insertWhisperBtn').addEventListener('click', function(){
+    if(!activeMood) return;
+    var line = WHISPERS_BY_MOOD[activeMood].lines[activeMoodIndex];
+    var cur = letterText.value.trim();
+    letterText.value = cur ? (cur + '\n\n' + line + ' ') : (line + ' ');
+    letterText.focus();
+    saveDraft();
+    playSoftChime(659.25);
+    haptic(20);
+    if(window.gsap){
+      window.gsap.fromTo(letterText, { opacity: 0.5 }, { opacity: 1, duration: 0.35 });
+    }
+  });
+
+  document.getElementById('closeWhisperBtn').addEventListener('click', function(){
+    whisperDrawer.classList.remove('open');
+    document.querySelectorAll('.emotion-pill').forEach(function(p){ p.classList.remove('active'); });
+  });
+
+  // ---------- 6. Salutation & Sign-off Tone Cycling ----------
+  document.getElementById('cycleSalutationBtn').addEventListener('click', function(){
+    salIdx = (salIdx + 1) % SALUTATIONS.length;
+    salutationLabel.textContent = SALUTATIONS[salIdx];
+    playPaperRustle(0.1, 1050);
+    haptic(12);
+    saveDraft();
+  });
+
+  document.getElementById('cycleSignoffBtn').addEventListener('click', function(){
+    sigIdx = (sigIdx + 1) % SIGNOFFS.length;
+    signoffLabel.textContent = SIGNOFFS[sigIdx];
+    playPaperRustle(0.1, 1050);
+    haptic(12);
+    saveDraft();
+  });
+
+  // ---------- 7. Sticker Placement & Mobile-Friendly Manipulation ----------
+  function deselectAllStickers(){
+    document.querySelectorAll('.sticker.selected').forEach(function(s){ s.classList.remove('selected'); });
+  }
+
+  paperSurface.addEventListener('pointerdown', function(e){
+    if(!e.target.closest('.sticker')){
+      deselectAllStickers();
+    }
+  });
+
+  function addSticker(emoji, xPct, yPct, rotVal, scaleVal){
+    var rot = typeof rotVal === 'number' ? rotVal : Math.round((Math.random()*24)-12);
+    var scale = typeof scaleVal === 'number' ? scaleVal : 1;
+    var data = {emoji:emoji, x:xPct, y:yPct, rot:rot, scale:scale, id:Date.now()+Math.random()};
+    stickers.push(data);
+    renderSticker(data, true);
+    saveDraft();
+  }
+
+  function renderSticker(data, animateIn){
+    var el = document.createElement('div');
+    el.className = 'sticker';
+    el.style.left = data.x + '%';
+    el.style.top = data.y + '%';
+    var sc = data.scale || 1;
+    el.style.transform = 'translate(-50%,-50%) rotate(' + data.rot + 'deg) scale(' + sc + ')';
+
+    var glyph = document.createElement('span');
+    glyph.textContent = data.emoji;
+    el.appendChild(glyph);
+
+    var ctrls = document.createElement('div');
+    ctrls.className = 'sticker-controls';
+
+    var rotBtn = document.createElement('button');
+    rotBtn.type = 'button';
+    rotBtn.className = 'sticker-ctrl-btn';
+    rotBtn.textContent = '↻';
+    rotBtn.title = 'Rotate';
+
+    var sizeBtn = document.createElement('button');
+    sizeBtn.type = 'button';
+    sizeBtn.className = 'sticker-ctrl-btn';
+    sizeBtn.textContent = '⤢';
+    sizeBtn.title = 'Resize';
+
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'remove';
+    rm.textContent = '×';
+    rm.title = 'Remove';
+
+    ctrls.appendChild(rotBtn);
+    ctrls.appendChild(sizeBtn);
+    ctrls.appendChild(rm);
+    el.appendChild(ctrls);
+    paperSurface.appendChild(el);
+
+    if(animateIn && window.gsap){
+      window.gsap.fromTo(el,
+        { scale: 0.2, opacity: 0 },
+        {
+          scale: sc,
+          opacity: 1,
+          duration: 0.45,
+          ease: 'back.out(2.1)',
+          onComplete: function(){
+            el.style.transform = 'translate(-50%,-50%) rotate(' + data.rot + 'deg) scale(' + (data.scale || 1) + ')';
+          }
+        }
+      );
+    }
+
+    function updateTransform(){
+      el.style.transform = 'translate(-50%,-50%) rotate(' + data.rot + 'deg) scale(' + (data.scale || 1) + ')';
+    }
+
+    var dragging = false;
+
+    function toPct(clientX, clientY){
+      var rect = paperSurface.getBoundingClientRect();
+      var x = ((clientX - rect.left) / rect.width) * 100;
+      var y = ((clientY - rect.top) / rect.height) * 100;
+      x = Math.max(4, Math.min(96, x));
+      y = Math.max(4, Math.min(96, y));
+      return {x:x, y:y};
+    }
+
+    el.addEventListener('pointerdown', function(e){
+      if(e.target.closest('.sticker-controls')) return;
+      deselectAllStickers();
+      el.classList.add('selected');
+      dragging = true;
+      if(lenis) lenis.stop();
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    el.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      var p = toPct(e.clientX, e.clientY);
+      data.x = p.x; data.y = p.y;
+      el.style.left = p.x + '%';
+      el.style.top = p.y + '%';
+    });
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      if(lenis) lenis.start();
+      saveDraft();
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+
+    rotBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      data.rot = ((data.rot || 0) + 22) % 360;
+      updateTransform();
+      haptic(10);
+      saveDraft();
+    });
+
+    sizeBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var sizes = [0.8, 1, 1.3, 1.6];
+      var cur = data.scale || 1;
+      var idx = sizes.indexOf(cur);
+      data.scale = sizes[(idx + 1) % sizes.length];
+      updateTransform();
+      haptic(10);
+      saveDraft();
+    });
+
+    rm.addEventListener('click', function(e){
+      e.stopPropagation();
+      stickers = stickers.filter(function(s){ return s.id !== data.id; });
+      el.remove();
+      haptic(15);
+      saveDraft();
+    });
+  }
+
+  stickerTray.addEventListener('click', function(e){
+    var btn = e.target.closest('.tray-btn');
+    if(!btn) return;
+    var emoji = btn.getAttribute('data-emoji');
+    var x = 26 + Math.random()*48;
+    var y = 24 + Math.random()*48;
+    playPaperRustle(0.12, 1350);
+    haptic(18);
+    addSticker(emoji, x, y);
+  });
+
+  // ---------- 8. Paper Themes, Fountain Ink & Wax Seal Customization ----------
+  document.querySelectorAll('.swatch').forEach(function(sw){
+    sw.addEventListener('click', function(){
+      document.querySelectorAll('.swatch').forEach(function(s){ s.classList.remove('active'); });
+      sw.classList.add('active');
+      applyPaperTheme(paperSurface, sw.getAttribute('data-theme'));
+      playPaperRustle(0.18, 900);
+      haptic(15);
+      saveDraft();
+    });
+  });
+
+  function applyPaperTheme(el, theme){
+    el.setAttribute('data-theme', theme);
+    var map = {
+      parchment: {paper:'#cda36c', tint:'rgba(120,80,30,.12)'},
+      blush:     {paper:'#e8bfa8', tint:'rgba(161,60,66,.14)'},
+      sage:      {paper:'#c7c2a0', tint:'rgba(125,147,112,.16)'},
+      dusk:      {paper:'#c9ae9a', tint:'rgba(156,133,179,.16)'},
+      cream:     {paper:'#ead8bc', tint:'rgba(165,125,75,.10)'}
+    };
+    var c = map[theme] || map.parchment;
+    el.style.background = c.paper;
+    el.style.backgroundImage =
+      'linear-gradient(' + c.tint + ', ' + c.tint + '), ' +
+      'linear-gradient(var(--line) 1px, transparent 1px), ' +
+      'radial-gradient(ellipse at top right, rgba(255,255,255,.3), transparent 55%)';
+    el.style.backgroundSize = '100% 100%, 100% 2.1rem, 100% 100%';
+    el.style.backgroundPosition = '0 0, 0 4.4rem, 0 0';
+  }
+
+  function applyInkColor(color){
+    currentInk = color || '#3e2914';
+    document.documentElement.style.setProperty('--active-ink', currentInk);
+    document.querySelectorAll('.ink-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-ink') === currentInk);
+    });
+  }
+
+  document.getElementById('inkSwatches').addEventListener('click', function(e){
+    var btn = e.target.closest('.ink-btn');
+    if(!btn) return;
+    applyInkColor(btn.getAttribute('data-ink'));
+    playSoftChime(480);
+    haptic(12);
+    saveDraft();
+  });
+
+  function applyWaxChoice(symbol){
+    currentWax = symbol || '♡';
+    document.querySelectorAll('.wax-choice-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-wax') === currentWax);
+    });
+    var heroSeal = document.getElementById('hero3dSeal');
+    if(heroSeal) heroSeal.textContent = currentWax;
+  }
+
+  document.getElementById('waxSwatches').addEventListener('click', function(e){
+    var btn = e.target.closest('.wax-choice-btn');
+    if(!btn) return;
+    applyWaxChoice(btn.getAttribute('data-wax'));
+    playWaxStampSound();
+    haptic(20);
+    saveDraft();
+  });
+
+  // ---------- 9. Local Draft Auto-Save (Fear-Free Mobile Protection) ----------
+  var DRAFT_KEY = 'ink_bloom_draft_v2';
+  var draftStatus = document.getElementById('draftStatus');
+
+  function saveDraft(){
+    try{
+      var draft = {
+        f: fromInput.value,
+        t: toInput.value,
+        b: letterText.value,
+        th: paperSurface.getAttribute('data-theme') || 'parchment',
+        ic: currentInk,
+        w: currentWax,
+        sal: salIdx,
+        sig: sigIdx,
+        s: stickers
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      if(draftStatus){
+        draftStatus.textContent = '✦ Saved safely on your phone';
+      }
+    }catch(e){}
+  }
+
+  function restoreDraft(){
+    try{
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if(!raw) return;
+      var d = JSON.parse(raw);
+      if(!d) return;
+      if(d.f) fromInput.value = d.f;
+      if(d.t) toInput.value = d.t;
+      if(d.b) letterText.value = d.b;
+      if(d.th){
+        applyPaperTheme(paperSurface, d.th);
+        document.querySelectorAll('.swatch').forEach(function(s){
+          s.classList.toggle('active', s.getAttribute('data-theme') === d.th);
+        });
+      }
+      if(d.ic) applyInkColor(d.ic);
+      if(d.w) applyWaxChoice(d.w);
+      if(typeof d.sal === 'number' && SALUTATIONS[d.sal]){
+        salIdx = d.sal;
+        salutationLabel.textContent = SALUTATIONS[salIdx];
+      }
+      if(typeof d.sig === 'number' && SIGNOFFS[d.sig]){
+        sigIdx = d.sig;
+        signoffLabel.textContent = SIGNOFFS[sigIdx];
+      }
+      if(Array.isArray(d.s) && d.s.length){
+        stickers = [];
+        document.querySelectorAll('#paperSurface .sticker').forEach(function(n){ n.remove(); });
+        d.s.forEach(function(st){
+          var item = {
+            emoji: st.emoji,
+            x: st.x,
+            y: st.y,
+            rot: st.rot || 0,
+            scale: st.scale || 1,
+            id: Date.now() + Math.random()
+          };
+          stickers.push(item);
+          renderSticker(item, false);
+        });
+      }
+    }catch(e){}
+  }
+
+  [fromInput, toInput, letterText].forEach(function(inp){
+    inp.addEventListener('input', saveDraft);
+  });
+
+  document.getElementById('clearDraftBtn').addEventListener('click', function(){
+    letterText.value = '';
+    toInput.value = '';
+    fromInput.value = '';
+    stickers = [];
+    document.querySelectorAll('#paperSurface .sticker').forEach(function(n){ n.remove(); });
+    try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+    playPaperRustle(0.22, 850);
+    haptic(20);
+    if(draftStatus) draftStatus.textContent = '✦ Fresh sheet of paper ready';
+  });
+
+  // ---------- 10. URL Hash Encode / Decode (100% Backward Compatible) ----------
+  function b64encode(str){
+    return btoa(unescape(encodeURIComponent(str)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function b64decode(str){
+    str = str.replace(/-/g,'+').replace(/_/g,'/');
+    while(str.length % 4) str += '=';
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+  function buildLetterData(){
+    var payload = {
+      f: (fromInput.value || '').trim().slice(0,30),
+      t: (toInput.value || '').trim().slice(0,30),
+      b: letterText.value.slice(0,2000),
+      th: paperSurface.getAttribute('data-theme') || 'parchment',
+      s: stickers.map(function(s){
+        return [s.emoji, Math.round(s.x*10)/10, Math.round(s.y*10)/10, s.rot, s.scale || 1];
+      })
+    };
+    if(currentInk !== '#3e2914') payload.ic = currentInk;
+    if(currentWax !== '♡') payload.w = currentWax;
+    if(salIdx !== 0) payload.sal = salIdx;
+    if(sigIdx !== 0) payload.sig = sigIdx;
+    return payload;
+  }
+
+  function linkFor(data){
+    var json = JSON.stringify(data);
+    var hash = b64encode(json);
+    var base = location.href.split('#')[0];
+    return base + '#' + hash;
+  }
+
+  function decodeFromHash(){
+    var hash = location.hash.replace(/^#/, '');
+    if(!hash) return null;
+    try{
+      var json = b64decode(hash);
+      var data = JSON.parse(json);
+      if(typeof data.b !== 'string') return null;
+      return data;
+    }catch(e){ return null; }
+  }
+
+  // ---------- 11. View Switching with GSAP 3D Transitions ----------
+  function showOnly(view){
+    [introView, createView, shareView, receiveView].forEach(function(v){ v.style.display = 'none'; });
+    view.style.display = 'flex';
+    window.scrollTo(0, 0);
+    if(window.gsap){
+      var target = view.firstElementChild || view;
+      window.gsap.fromTo(target,
+        { opacity: 0, y: 18, rotationX: 6 },
+        { opacity: 1, y: 0, rotationX: 0, duration: 0.55, ease: 'power3.out', clearProps: 'transform' }
+      );
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function(){
+    playPaperRustle(0.22, 950);
+    haptic(20);
+    showOnly(createView);
+    setTimeout(function(){ letterText.focus(); }, 250);
+  });
+
+  // ---------- 12. 3D Folding & Wax Sealing Ceremony ----------
+  document.getElementById('sealBtn').addEventListener('click', function(){
+    if(!letterText.value.trim()){
+      letterText.focus();
+      haptic([30, 50, 30]);
+      if(window.gsap){
+        window.gsap.fromTo(paperTilt, { x: -7 }, { x: 0, duration: 0.4, ease: 'elastic.out(2, 0.2)' });
+      }
+      return;
+    }
+    deselectAllStickers();
+    var data = buildLetterData();
+    var link = linkFor(data);
+    document.getElementById('linkOutput').value = link;
+    var msg = encodeURIComponent('I wrote you a handwritten letter \u2014 open your envelope here: ' + link);
+    document.getElementById('whatsappBtn').href = 'https://wa.me/?text=' + msg;
+    document.getElementById('shareSealMini').textContent = currentWax;
+    window._pendingLink = link;
+
+    if(navigator.share){
+      document.getElementById('nativeShareBtn').style.display = 'inline-flex';
+    }
+
+    var overlay = document.getElementById('sealingOverlay');
+    var cLetter = document.getElementById('ceremonyLetter');
+    var cFlap = document.getElementById('ceremonyFlap');
+    var cWax = document.getElementById('ceremonyWax');
+    var statusTxt = document.getElementById('sealingStatusText');
+
+    cWax.textContent = currentWax;
+    statusTxt.textContent = 'folding your letter\u2026';
+    overlay.classList.add('show');
+    playPaperRustle(0.25, 900);
+    haptic(25);
+
+    if(window.gsap){
+      var tl = window.gsap.timeline({
+        onComplete: function(){
+          overlay.classList.remove('show');
+          if(threeBurstFn) threeBurstFn();
+          showOnly(shareView);
+        }
+      });
+      tl.set(cLetter, { y: -38, scaleY: 1, opacity: 1 })
+        .set(cFlap, { rotationX: 175 })
+        .set(cWax, { scale: 0, rotation: -20 })
+        .to(cLetter, { scaleY: 0.65, y: 0, duration: 0.35, ease: 'power2.inOut' })
+        .to(cFlap, {
+          rotationX: 0,
+          duration: 0.32,
+          ease: 'power2.in',
+          onStart: function(){ statusTxt.textContent = 'pressing the wax seal\u2026'; }
+        })
+        .to(cWax, {
+          scale: 1,
+          rotation: 0,
+          duration: 0.38,
+          ease: 'back.out(2.4)',
+          onStart: function(){
+            playWaxStampSound();
+            haptic([35, 45, 60]);
+          }
+        })
+        .to({}, { duration: 0.25 });
+    } else {
+      setTimeout(function(){
+        overlay.classList.remove('show');
+        showOnly(shareView);
+      }, 900);
+    }
+  });
+
+  document.getElementById('nativeShareBtn').addEventListener('click', function(){
+    if(navigator.share && window._pendingLink){
+      navigator.share({
+        title: 'A letter for you — Ink & Bloom',
+        text: 'I wrote you something by hand. Open the envelope:',
+        url: window._pendingLink
+      }).catch(function(){});
+    }
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var input = document.getElementById('linkOutput');
+    input.select();
+    input.setSelectionRange(0, 9999);
+    var btn = this;
+    var restore = btn.textContent;
+    function done(){
+      btn.textContent = 'Copied ✦';
+      playSoftChime(659.25);
+      haptic(20);
+      setTimeout(function(){ btn.textContent = restore; }, 1400);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(input.value).then(done, function(){ document.execCommand('copy'); done(); });
+    } else {
+      document.execCommand('copy'); done();
+    }
+  });
+
+  document.getElementById('backToEditBtn').addEventListener('click', function(){
+    playPaperRustle(0.15, 1000);
+    showOnly(createView);
+  });
+
+  document.getElementById('previewBtn').addEventListener('click', function(){
+    var link = window._pendingLink;
+    if(!link) return;
+    var hash = link.split('#')[1];
+    location.hash = hash;
+    loadReceiveView();
+  });
+
+  // ---------- 13. Receive View & 3D Envelope Opening ----------
+  var currentData = null;
+  var resetEnvelopeState = null;
+
+  function loadReceiveView(){
+    var data = decodeFromHash();
+    if(!data){ showOnly(createView); return; }
+    currentData = data;
+    var salText = (typeof data.sal === 'number' && SALUTATIONS[data.sal]) ? SALUTATIONS[data.sal] : 'My dearest';
+    var sigText = (typeof data.sig === 'number' && SIGNOFFS[data.sig]) ? SIGNOFFS[data.sig] : 'Forever yours,';
+
+    document.getElementById('addrTo').textContent = data.t ? ('For ' + data.t) : 'For you';
+    document.getElementById('addrFrom').textContent = data.f ? ('a handwritten letter from ' + data.f) : 'a handwritten letter is waiting inside';
+    applyPaperTheme(document.getElementById('letterFull'), data.th || 'parchment');
+    applyInkColor(data.ic || '#3e2914');
+    document.getElementById('wax').textContent = data.w || '♡';
+
+    document.getElementById('fullSalutation').textContent = data.t ? (salText + ' ' + data.t + ',') : (salText + ',');
+    document.getElementById('fullBody').textContent = data.b || '';
+    document.getElementById('fullSignoff').textContent = data.f ? (sigText + ' ' + data.f) : sigText;
+
+    // Clear + rebuild decorations on the full letter
+    document.querySelectorAll('#letterFull .sticker').forEach(function(n){ n.remove(); });
+    (data.s || []).forEach(function(arr){
+      var e = document.createElement('div');
+      e.className = 'sticker';
+      e.style.left = arr[1] + '%';
+      e.style.top = arr[2] + '%';
+      var sc = arr[4] || 1;
+      e.style.transform = 'translate(-50%,-50%) rotate(' + arr[3] + 'deg) scale(' + sc + ')';
+      e.style.cursor = 'default';
+      e.style.zIndex = '1';
+      e.textContent = arr[0];
+      document.getElementById('letterFull').appendChild(e);
+    });
+
+    if(resetEnvelopeState) resetEnvelopeState();
+    letterView.classList.remove('open');
+    showOnly(receiveView);
+  }
+
+  // Envelope cut + wax tap interaction
+  (function(){
+    var scissors = document.getElementById('scissors');
+    var track = scissors.parentElement;
+    var envelope = document.getElementById('envelope');
+    var wax = document.getElementById('wax');
+    var cutProgress = document.getElementById('envCutProgress');
+    var cutHint = document.getElementById('cutHint');
+    var opened = false;
+    var dragging = false, maxX = 0, lastSnipX = 0;
+
+    function updateMax(){ maxX = Math.max(10, track.clientWidth - scissors.clientWidth - 8); }
+
+    resetEnvelopeState = function(){
+      opened = false;
+      dragging = false;
+      envelope.classList.remove('opened');
+      scissors.style.left = '0px';
+      if(cutProgress) cutProgress.style.width = '0%';
+      if(cutHint) cutHint.textContent = 'drag the scissors across \u2014 or tap the wax seal';
+    };
+
+    scissors.addEventListener('pointerdown', function(e){
+      if(opened) return;
+      dragging = true;
+      lastSnipX = 0;
+      updateMax();
+      if(lenis) lenis.stop();
+      try{ scissors.setPointerCapture(e.pointerId); }catch(err){}
+      e.preventDefault();
+    });
+    scissors.addEventListener('pointermove', function(e){
+      if(!dragging || opened) return;
+      var rect = track.getBoundingClientRect();
+      var x = e.clientX - rect.left - (scissors.clientWidth/2);
+      x = Math.max(0, Math.min(maxX, x));
+      scissors.style.left = x + 'px';
+      var pct = maxX > 0 ? (x / maxX) * 94 : 0;
+      if(cutProgress) cutProgress.style.width = pct + '%';
+
+      if(Math.abs(x - lastSnipX) > 26){
+        lastSnipX = x;
+        playPaperRustle(0.06, 1600);
+        haptic(8);
+      }
+
+      if(x >= maxX * 0.88){
+        openEnvelope();
+      }
+    });
+    function endScissorDrag(){
+      if(!dragging) return;
+      dragging = false;
+      if(lenis) lenis.start();
+      if(!opened){
+        scissors.style.left = '0px';
+        if(cutProgress) cutProgress.style.width = '0%';
+      }
+    }
+    scissors.addEventListener('pointerup', endScissorDrag);
+    scissors.addEventListener('pointercancel', endScissorDrag);
+
+    function openEnvelope(){
+      if(opened) return;
+      opened = true;
+      dragging = false;
+      if(lenis) lenis.start();
+      updateMax();
+      scissors.style.left = maxX + 'px';
+      if(cutProgress) cutProgress.style.width = '94%';
+      if(cutHint) cutHint.textContent = 'tap the rising letter to unfold it ✦';
+      envelope.classList.add('opened');
+      playPaperRustle(0.32, 820);
+      playSoftChime(587.33);
+      haptic([25, 40, 35]);
+      if(threeBurstFn) threeBurstFn();
+    }
+
+    wax.addEventListener('click', function(){
+      if(!opened){
+        openEnvelope();
+      } else {
+        openFullLetter();
+      }
+    });
+
+    document.getElementById('letterPeek').addEventListener('click', function(){
+      if(!opened){ openEnvelope(); return; }
+      openFullLetter();
+    });
+  })();
+
+  function openFullLetter(){
+    letterView.classList.add('open');
+    playPaperRustle(0.28, 880);
+    haptic(20);
+    if(threeBurstFn) threeBurstFn();
+    var fullCard = document.getElementById('letterFull');
+    if(window.gsap && fullCard){
+      window.gsap.fromTo(fullCard,
+        { rotationX: -35, scaleY: 0.72, opacity: 0, y: 36 },
+        { rotationX: 0, scaleY: 1, opacity: 1, y: 0, duration: 0.78, ease: 'power3.out', clearProps: 'transform' }
+      );
+      window.gsap.fromTo(['#fullSalutation', '#fullBody', '#fullSignoff'],
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.55, stagger: 0.14, delay: 0.22, ease: 'power2.out' }
+      );
+    }
+  }
+
+  document.getElementById('closeLetterBtn').addEventListener('click', function(){
+    playPaperRustle(0.16, 950);
+    letterView.classList.remove('open');
+  });
+
+  document.getElementById('writeBackBtn').addEventListener('click', function(){
+    letterView.classList.remove('open');
+    history.replaceState(null, '', location.pathname + location.search);
+    stickers = [];
+    document.querySelectorAll('#paperSurface .sticker').forEach(function(n){ n.remove(); });
+    letterText.value = '';
+    fromInput.value = currentData && currentData.t ? currentData.t : '';
+    toInput.value = currentData && currentData.f ? currentData.f : '';
+    playPaperRustle(0.22, 950);
+    showOnly(createView);
+  });
+
+  // ---------- 14. Heartbeat Connection Button inside Received Letter ----------
+  (function(){
+    var hbBtn = document.getElementById('heartbeatBtn');
+    var hbLabel = document.getElementById('heartbeatLabel');
+    var hbTimer = null;
+
+    function triggerBeat(){
+      haptic([70, 110, 95]);
+      playWaxStampSound();
+      if(threeBurstFn) threeBurstFn();
+    }
+
+    function startHeartbeat(e){
+      e.preventDefault();
+      hbBtn.classList.add('pulsing');
+      hbLabel.textContent = 'Feeling their heartbeat\u2026';
+      triggerBeat();
+      hbTimer = setInterval(triggerBeat, 950);
+    }
+
+    function stopHeartbeat(){
+      if(!hbTimer && !hbBtn.classList.contains('pulsing')) return;
+      clearInterval(hbTimer);
+      hbTimer = null;
+      hbBtn.classList.remove('pulsing');
+      hbLabel.textContent = 'Hold to feel the warmth of this letter';
+    }
+
+    hbBtn.addEventListener('pointerdown', startHeartbeat);
+    hbBtn.addEventListener('pointerup', stopHeartbeat);
+    hbBtn.addEventListener('pointerleave', stopHeartbeat);
+    hbBtn.addEventListener('pointercancel', stopHeartbeat);
+  })();
+
+  // ---------- 15. Quiet Romantic Copy & Starter Prompts ----------
+  var MOOD_LINES = [
+    'Some letters are read once. Yours will be read a hundred times.',
+    'Say the thing you keep almost saying.',
+    'The smallest words, written by hand, can hold the most.',
+    'Every love story deserves at least one letter.',
+    'Let this be the page they keep forever.',
+    'Perfection isn\u2019t what they want \u2014 they just want your voice.'
+  ];
+  var STARTER_PROMPTS = [
+    'Start with the thing you never quite say out loud...',
+    'Tell them what you noticed today that made you think of them...',
+    'Write it as if this is the only chance you get to say it...',
+    'Start with their name and let the rest follow...',
+    'Tell them what you\u2019d miss most if this letter never reached them...'
+  ];
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  var introQuoteEl = document.getElementById('introQuote');
+  introQuoteEl.textContent = '\u276E ' + pick(MOOD_LINES) + ' \u276F';
+  letterText.setAttribute('placeholder', pick(STARTER_PROMPTS));
+
+  document.getElementById('introQuoteBox').addEventListener('click', function(){
+    introQuoteEl.textContent = '\u276E ' + pick(MOOD_LINES) + ' \u276F';
+    playPaperRustle(0.1, 1150);
+    haptic(12);
+    if(window.gsap){
+      window.gsap.fromTo(introQuoteEl, { opacity: 0.3, y: 4 }, { opacity: 1, y: 0, duration: 0.3 });
+    }
+  });
+
+  // ---------- 16. Boot ----------
+  applyPaperTheme(paperSurface, 'parchment');
+  restoreDraft();
+
+  var initial = decodeFromHash();
+  if(initial){
+    loadReceiveView();
+  } else {
+    showOnly(introView);
+  }
+
+  window.addEventListener('hashchange', function(){
+    var d = decodeFromHash();
+    if(d) loadReceiveView();
+  });
+
+  window.addEventListener('DOMContentLoaded', function(){
+    initLenis();
+    initThreeScene();
+    init3DTiltInteractions();
+  });
+  // Fallback if DOMContentLoaded already fired
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(function(){
+      initLenis();
+      initThreeScene();
+      init3DTiltInteractions();
+    }, 60);
+  }
+
+})();
+</script>
+</body>
+</html>
